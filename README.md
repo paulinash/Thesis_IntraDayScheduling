@@ -48,7 +48,10 @@ Furthermore, make sure that Ipopt is properly installed. For more details, look 
 [IPOPT](https://github.com/coin-or/Ipoptr)
 
 ## Execution
-Todo: Add Step by step guide
+In order to start an optimization process, simply execute main.py.
+   ```
+   python optimization/main.py
+   ```
 
 ## Reproducibility
 In order to reproduce the forecasts used in the paper, the following steps need to be done:
