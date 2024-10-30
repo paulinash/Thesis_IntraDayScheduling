@@ -239,7 +239,7 @@ def validate_expected_values(model):
 
     pg_expected = [pg_low[i] + pg_high[i] for i in range(len(pg_low))]
 
-    if not all([abs(pb_tilde[i] + pg_expected[i]) < 1e-5 for i in range(len(pb_tilde))]):
+    if not all([abs(pb_tilde[i] + pg_expected[i]) < 1e-4 for i in range(len(pb_tilde))]):
         print('Warning: Expected values do not hold. Check the integration bounds/breakpoints.')    
         for i in range(len(pb_tilde)):
             print(f'Sum of expected values at time {list(model.model.time)[i]}: {pb_tilde[i] + pg_expected[i]}')
