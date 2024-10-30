@@ -28,10 +28,38 @@ The repository is structured as shown below:
 ```
 
 ## Installation
-Todo: Add step by step guide
+1. Install virtualenv
+   ```
+   pip install virtualenv
+   ```
+2. Create a Virtual Environment
+   ```
+   virtualenv myenv
+   ```
+3. Activate the Virtual Environment
+   ```
+   source myenv/Scripts/activate
+   ```
+4. Install Packages specified in requirements-optimization.txt
+   ```
+   python -m pip install -r requirements-optimization.txt
+   ```
+Furthermore, make sure that Ipopt is properly installed. For more details, look here:
+[IPOPT](https://github.com/coin-or/Ipoptr)
 
 ## Execution
 Todo: Add Step by step guide
+
+## Reproducibility
+In order to reproduce the forecasts used in the paper, the following steps need to be done:
+1. Install corresponding requirements
+   ```
+   python -m pip install -r requirements-forecasting.txt
+   ```
+2. Execute create_quantile_forecasts.ipynb with the following specifications:
+    - XXX1
+    - XXX2
+
 
 ## Funding
 This project is funded by the Helmholtz Association under the "Energy System Design" program and the German Research Foundation as part of the Research Training Group 2153 "Energy Status Data: Informatics Methods for its Collection, Analysis and Exploitation"
