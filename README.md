@@ -7,7 +7,6 @@
 ToDo: Insert paper/Author information
 
 ## Repository Structure
-The repository is structured as shown below:
 ```
 .
 ├── forecasting/ 
@@ -16,6 +15,8 @@ The repository is structured as shown below:
 │   └── visualize_data.ipynb             # Visualize forecasted PDFs
 │
 ├── data/
+│   ├── forecasts/                       # Contains forecasted prosumption data (forecasts used in paper and a gaussian example is included)
+│   └── parameters/                      # Contains json files with params such as cost-function weights, battery specifications, ...
 │
 └── optimization/ 
     ├── input_data.py                    # Load forecasts and parameters
@@ -44,18 +45,23 @@ The repository is structured as shown below:
    ```
    python -m pip install -r requirements-optimization.txt
    ```
-Furthermore, make sure that Ipopt is properly installed. For more details, look here:
-[IPOPT](https://github.com/coin-or/Ipoptr)
+Furthermore, ensure that IPOPT is properly installed. For more information, see
+[IPOPT](https://github.com/coin-or/Ipopt)
 
 ## Execution
-In order to start an optimization process, simply execute main.py.
+In order to start an optimization process, execute main.py.
    ```
    python optimization/main.py
    ```
 
 ## Reproducibility
-In order to reproduce the forecasts used in the paper, the following steps need to be done:
-1. Install corresponding requirements
+In order to reproduce the results shown in the paper, execute the optimization process with the corresponding parameter file for Case 1, Case 2, or Case 3. The necessary forecasts are included in the repository.<br>
+Note that for Case 1, uncertainties neither in the grid nor in the battery system are penalized. Thus, there is no single best solution on how to distribute the uncertainties.
+In order to obtain the exact results shown in the paper, the respective constraints in 'optimization_model.py' after '### Reproduce Case 1 ###' need to be activated.
+
+
+In order to reproduce the forecasts, the following steps need to be done:
+1. Install corresponding forecasting requirements
    ```
    python -m pip install -r requirements-forecasting.txt
    ```
