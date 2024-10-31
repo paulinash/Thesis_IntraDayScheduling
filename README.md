@@ -4,7 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![](https://img.shields.io/badge/Contact-janik.pinter%40kit.edu-orange?label=Contact)](janik.pinter@kit.edu)
 
-ToDo: Insert paper/Author information
+This repository contains the Python implementation for the paper:
+> Residential Day-Ahead PV-Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operations <br>
+> Authors: Janik Pinter, Frederik Zahn, Maximilian Beichter, Ralf Mikut, and Veit Hagenmeyer
 
 ## Repository Structure
 ```
