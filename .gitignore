@@ -166,4 +166,4 @@ cython_debug/
 /data
 /temporary_folder
 /forecasting/darts_logs
-/forecasting/results
+/forecasting/prosumption

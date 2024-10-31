@@ -276,7 +276,7 @@ class BaseOptimizationModel:
         self.model.constr_pb_tilde_relaxation = pyo.Constraint(self.model.time, rule=constr_pb_tilde_relaxation)
         ##########################################################################################################
 
-        ############################################# funky stuff ##################################################
+        ############################################# Reproduce Case 1 ###########################################
         # def constr_x_low(model, t):
         #     return model.x_low[t] == 0
         # self.model.constr_x_low = pyo.Constraint(self.model.time, rule=constr_x_low)
