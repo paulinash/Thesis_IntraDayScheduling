@@ -15,7 +15,9 @@ ToDo: Insert paper/Author information
 │   └── visualize_data.ipynb             # Visualize forecasted PDFs
 │
 ├── data/
-│   ├── forecasts/                       # Contains forecasted prosumption data (forecasts used in paper and a gaussian example is included)
+│   ├── ground_truth/                    # Contains the ground-truth of prosumption of selected real-world example
+│   ├── quantile_forecasts/              # Contains the quantile forecasts
+│   ├── parametric_forecasts/            # Contains parametric forecasts for two distributions (Gaussian and sum of 2 logistic functions)
 │   └── parameters/                      # Contains json files with params such as cost-function weights, battery specifications, ...
 │
 └── optimization/ 
