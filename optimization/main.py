@@ -9,14 +9,14 @@ from experiment_tracking import start_experiment, log_data, end_experiment, log_
 
 def main():
     # Example 1: Normal Distribution
-    # fc_folder = 'data/forecasts/example-forecasts-normal/'
-    # params_path = 'data/parameters/example-params-normal.json'
-    # timeframe = ['2024-08-30 00:00:00', '2024-08-30 23:00:00']
+    fc_folder = 'data/parametric_forecasts/normal_dist_forecast_2024-10-31/'
+    params_path = 'data/parameters/params-normal-dist.json'
+    timeframe = ['2017-05-18 06:00:00', '2017-05-19 05:00:00']
 
     # Example 2: Sum of two logistic functions (Recreate paper results)
-    fc_folder = 'data/forecasts/forecasts_05_10_2024/s2l_wS2/'
-    params_path = 'data/parameters/params_case1.json'
-    timeframe = ['2017-05-18 06:00:00', '2017-05-19 05:00:00']
+    # fc_folder = 'data/parametric_forecasts/s2l_dist_forecast_2024-10-02/' 
+    # params_path = 'data/parameters/params_case2.json'
+    # timeframe = ['2017-05-18 06:00:00', '2017-05-19 05:00:00']
 
     # Load data
     forecasts = load_forecasts(fc_folder, timeframe=timeframe)
