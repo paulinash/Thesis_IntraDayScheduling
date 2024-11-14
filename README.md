@@ -70,8 +70,12 @@ In order to reproduce the forecasts, the following steps need to be done:
    python -m pip install -r requirements-forecasting.txt
    ```
 2. Execute create_quantile_forecasts.ipynb with the following specifications:
-    - XXX1
-    - XXX2
+    - The forecast were generated seeded using a system with the following specs, os, python version:
+      - **Processor**: Intel 13th Gen Core i9-13900
+      - **Memory**: 64 GB RAM
+      - **Graphics**: NVIDIA GeForce RTX 3090 (Driver Version: 555.42.02 / CUDA Version: 12.5)
+      - **OS**: Ubuntu 22.04.4 LTS
+      - **PYTHON**: 3.12.5
 
 
 ## Funding
