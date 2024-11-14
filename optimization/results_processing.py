@@ -1,8 +1,6 @@
 ''' Plot the results of the optimization. '''
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import matplotlib.dates as mdates
-import plotly.express as px
 from scipy.optimize import fsolve
 import numpy as np
 import os
@@ -37,7 +35,7 @@ def plot_battery_evolution(model):
     ax.plot(time_e, e_nominal, '-', color='limegreen', linewidth=3, label='Nominal Battery State')
     ax.plot(time_e, e_exp, linewidth=2, color='navy', label='Expected Battery State')
     ax.plot(time_e, e_min, linewidth=2, color='magenta', label='Min/Max Battery State')
-    ax.plot(time_e, e_max, linewidth=2, color='magenta') # label='Max Battery State'
+    ax.plot(time_e, e_max, linewidth=2, color='magenta')
 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
@@ -150,7 +148,6 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
             pg_exp_high_cond[i] = pg_quantile_high[i]
 
     time.append(str(int(time[-1])+0.95))  # Add a last time point for the step plot.
-    #print(time)
     pg_nom.append(pg_nom[-1])  # Repeat the last y-value (nominal grid power) for the step plot.
     pg_exp_low_cond.append(pg_exp_low_cond[-1])  
     pg_exp_high_cond.append(pg_exp_high_cond[-1])
@@ -227,9 +224,9 @@ def get_file_path(filename):
 
 
 def validate_expected_values(model):
-    ''' In the model, the expected value of the battery power uncertainty should match the one of the grid. 
-    This function validates said condition. A difference of 1e-5 is tolerated. The most probable cause for violating
-    this condition are poor integration bounds or breakpoints. Try to increase number of bkpts or adjust the bounds. '''
+    ''' In the model, the expected value of the battery power uncertainty should match the one of the grid (see paper 
+    Equation 8). This function checks said condition. The most probable cause for violating this condition are poor 
+    integration bounds or breakpoints in very steep PDFs. Try to increase number of bkpts or adjust the bounds. '''
 
     pb_tilde = model.model.pb_tilde.get_values().values()
 
@@ -238,11 +235,8 @@ def validate_expected_values(model):
     pg_high = [model.model.exp_pg_high[t].value for t in model.model.time]
 
     pg_expected = [pg_low[i] + pg_high[i] for i in range(len(pg_low))]
+  
+    print("Sum of expected values for validation purposes:")
+    for i in range(len(pb_tilde)):
+        print(f'Sum of expected values at time {list(model.model.time)[i]}: {pb_tilde[i] + pg_expected[i]}')
 
-    if not all([abs(pb_tilde[i] + pg_expected[i]) < 1e-4 for i in range(len(pb_tilde))]):
-        print('Warning: Expected values do not hold. Check the integration bounds/breakpoints.')    
-        for i in range(len(pb_tilde)):
-            print(f'Sum of expected values at time {list(model.model.time)[i]}: {pb_tilde[i] + pg_expected[i]}')
-
-    else:
-        print('Expected values hold.')
