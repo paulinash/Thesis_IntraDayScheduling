@@ -1,19 +1,19 @@
-# Residential Day-Ahead PV-Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operations
+# Probabilistic Day-Ahead Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operation
 
 [![](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![](https://img.shields.io/badge/Contact-janik.pinter%40kit.edu-orange?label=Contact)](janik.pinter@kit.edu)
 
 This repository contains the Python implementation for the paper:
-> Residential Day-Ahead PV-Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operations <br>
+> Probabilistic Day-Ahead Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operation <br>
 > Authors: Janik Pinter, Frederik Zahn, Maximilian Beichter, Ralf Mikut, and Veit Hagenmeyer
 
 ## Repository Structure
 ```
 .
 ├── forecasting/ 
-│   ├── create_quantile_forecasts.ipynb  # Based on real-world data, create quantile prosumption forecasts
-│   ├── convert_forecasts.ipynb          # Convert quantile forecasts to parametric form and store results
+│   ├── create_quantile_forecasts.ipynb  # Create quantile prosumption forecasts based on real-world data
+│   ├── convert_forecasts.ipynb          # Convert quantile forecasts to parametric form
 │   └── visualize_data.ipynb             # Visualize forecasted PDFs
 │
 ├── data/
@@ -60,8 +60,8 @@ In order to start an optimization process, execute main.py.
 
 ## Reproducibility
 In order to reproduce the results shown in the paper, execute the optimization process with the corresponding parameter file for Case 1, Case 2, or Case 3. The necessary forecasts are included in the repository.<br>
-Note that for Case 1, uncertainties neither in the grid nor in the battery system are penalized. Thus, there is no single best solution on how to distribute the uncertainties.
-In order to obtain the exact results shown in the paper, the respective constraints in 'optimization_model.py' after '### Reproduce Case 1 ###' need to be activated.
+Note that for Case 1, uncertainties neither in the grid nor in the battery system are penalized. 
+Thus, <ins>x</ins> and  ̅x are dispensable decision variables and are therefore set to zero (enable respective constraints in 'optimization_model.py' after '### Reproduce Case 1 ###' to obtain the same results as shown in the paper for Case 1).
 
 
 In order to reproduce the forecasts, the following steps need to be done:
