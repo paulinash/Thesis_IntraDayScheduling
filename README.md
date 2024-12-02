@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/Contact-janik.pinter%40kit.edu-orange?label=Contact)](janik.pinter@kit.edu)
 
 This repository contains the Python implementation for the paper:
-> [Probabilistic Day-Ahead Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operation]([https://github.com/coin-or/Ipopt](https://arxiv.org/abs/2411.12480)) <br>
+> [Probabilistic Day-Ahead Battery Scheduling based on Mixed Random Variables for Enhanced Grid Operation](https://arxiv.org/abs/2411.12480) <br>
 > Authors: Janik Pinter, Frederik Zahn, Maximilian Beichter, Ralf Mikut, and Veit Hagenmeyer
 
 ## Repository Structure
