@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import sys
 
 def load_forecasts(folder_path, timeframe=None):
     ''' Load the expected value forecast and the pdf weights from the specified folder path. '''
@@ -14,7 +15,11 @@ def load_forecasts(folder_path, timeframe=None):
         fc_exp = fc_exp.loc[timeframe[0]:timeframe[1]]
 
     if fc_exp.index.freq is None:
-        fc_exp.index.freq = pd.infer_freq(fc_exp.index)
+        try:
+            fc_exp.index.freq = pd.infer_freq(fc_exp.index)
+        except ValueError:
+            print('ValueError: Specified timeframe is either not part of the forecasts or too short to infer frequency. Adjust the timeframe to match the specified forecasts.')
+            sys.exit(1)
 
     fc_exp = fc_exp[fc_exp.columns[0]]
     

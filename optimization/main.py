@@ -16,7 +16,9 @@ def main():
     # Example 2: Sum of two logistic functions (Recreate paper results)
     fc_folder = 'data/parametric_forecasts/s2l_dist_forecast_2024-10-02/' 
     params_path = 'data/parameters/params_case2.json'
-    timeframe = ['2017-05-18 06:00:00', '2017-05-19 05:00:00']
+    timeframe = ['2017-05-18 06:00:00', '2017-05-19 05:00:00']  # Forecasted nighttime PDFs can be too tight for plotting or solving the optimization model (See limitations section in the paper).
+                                                                # Simple solution: Either choose a different date, adjust the timeframe to exclude nighttime (e.g. 06:00-23:00), or use gaussian distribution.
+                                                                # Better solution: Redo the forecasts with additional constraints, or approximate nighttime PDFs with a different distribution.
 
     # Load data
     forecasts = load_forecasts(fc_folder, timeframe=timeframe)

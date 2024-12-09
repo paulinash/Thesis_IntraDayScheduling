@@ -44,8 +44,8 @@ def plot_battery_evolution(model):
 
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, ordered_time_e)))
-    plt.xticks(np.arange(0, 25, 2), rotation=45)
-    plt.ylim([-0.5, 14.1])
+    plt.xticks(np.arange(0, len(e_max), 2), rotation=45)
+    plt.ylim([-0.5, model.e_limit_max + 0.6])
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
     plt.tight_layout()
@@ -185,7 +185,7 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     cbar.set_label('Probability of Deviations', rotation=270, labelpad=15)
 
     plt.ylim([-8.5, 4.5])
-    plt.xlim([-0.8, 24.3])
+    plt.xlim([-0.8, len(probs_low) + 0.3])
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
     plt.tight_layout()
@@ -193,7 +193,7 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
 
     ordered_time = model.model.time.ordered_data()
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, ordered_time)))
-    plt.xticks(np.arange(0, 24, 2), rotation=45)
+    plt.xticks(np.arange(0, len(probs_low), 2), rotation=45)
 
     plt.legend(loc='lower right')
     plt.ylabel('Grid Power [kW]')
