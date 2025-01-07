@@ -46,6 +46,8 @@ def main():
     print('Fin')
 
 
+    print('This is the day my thesis died 7.1.2025')
+    
 
 if __name__ == '__main__':
     main()
