@@ -41,7 +41,9 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
                 (model.pg_nom[t] - self.day_ahead_schedule[t])**2
                 + (-model.prob_low[t]*model.exp_pg_low[t]
                 + model.prob_high[t]*model.exp_pg_high[t])
-                for t in model.time) + sum((model.e_max[t] - model.e_min[t])**2 for t in model.time_e)
+                + self.c11 * model.pg_nom_plus[t]**2 
+                + self.c21 * model.pg_nom_minus[t]**2 
+                for t in model.time) 
         self.model.objective = pyo.Objective(rule=objective, sense=pyo.minimize)
 
 
