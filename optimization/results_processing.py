@@ -8,12 +8,11 @@ import os
 def postprocess_results(model):
     ''' Postprocess the results of the optimization. '''
 
-    plot_battery_evolution(model)
+    #plot_battery_evolution(model)
 
-    plot_power_exchange(model)
+    #plot_power_exchange(model)
 
     plot_probabilistic_power_schedule(model)
-
 
 def plot_battery_evolution(model):
     ''' Plots the optimal battery evolution over time. '''
@@ -56,7 +55,6 @@ def plot_battery_evolution(model):
     plt.savefig(file_path, dpi=200)
     #plt.show()
 
-
 def plot_power_exchange(model):
     ''' Plots the power exchange over time.'''
 
@@ -89,8 +87,6 @@ def plot_power_exchange(model):
     file_path = get_file_path('power_exchange.png')
     plt.savefig(file_path, dpi=200)
     # plt.show()
-
-
 
 def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     ''' Plot the probabilistic power schedule. '''

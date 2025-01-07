@@ -6,6 +6,7 @@ from input_data import load_forecasts, load_params, preprocess_data
 from optimization_model import BaseOptimizationModel
 from results_processing import postprocess_results, validate_expected_values
 from experiment_tracking import start_experiment, log_data, end_experiment, log_results
+from intraday_solve import solve_intra_day_problems
 
 def main():
     # Example 1: Normal Distribution
@@ -25,29 +26,20 @@ def main():
     params = load_params(params_path)
     input_data = preprocess_data(forecasts, params)
 
-    # Track the experiment in MLflow
-    # start_experiment(params['experiment_name'])
-    # log_data(input_data)
-
     # Run the optimization model
     model = BaseOptimizationModel(input_data)
     model.solve()
 
-
     # Process and visualize the results
-    validate_expected_values(model)
+    #validate_expected_values(model)
     postprocess_results(model)
-    
-
-    # Track results in MLflow
-    # log_results(model.model)
-    # end_experiment()
-
-    print('Fin')
 
 
-    print('This is the day my thesis died: 7.1.2025')
+    #### Intra Day Approach
+    time_slots = [4,8,12,16]
+    models = solve_intra_day_problems(model, forecasts, params, time_slots)
 
+    print(' we ran through')
 
 if __name__ == '__main__':
     main()
