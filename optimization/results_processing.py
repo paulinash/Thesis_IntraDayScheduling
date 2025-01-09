@@ -2,15 +2,16 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.optimize import fsolve
+from intraday_utils import get_gt
 import numpy as np
 import os
 
 def postprocess_results(model):
     ''' Postprocess the results of the optimization. '''
 
-    #plot_battery_evolution(model)
+    plot_battery_evolution(model)
 
-    #plot_power_exchange(model)
+    plot_power_exchange(model)
 
     plot_probabilistic_power_schedule(model)
 
@@ -61,7 +62,7 @@ def plot_power_exchange(model):
     pg_nom = list(model.model.pg_nom.get_values().values())
     pb_nom = list(model.model.pb_nom.get_values().values())
     pl = [model.model.pl[t] for t in model.model.time]
-
+    pl_gt = get_gt(model)
 
     pg_exp_low_cond = [model.model.pg_nom[t].value + model.model.exp_pg_low[t].value / model.model.prob_low[t].value for t in model.model.time]
     pg_exp_high_cond = [model.model.pg_nom[t].value + model.model.exp_pg_high[t].value / model.model.prob_high[t].value for t in model.model.time]
@@ -74,11 +75,12 @@ def plot_power_exchange(model):
     plt.figure(figsize=(10, 6))
     plt.plot(time, pb_nom, linewidth=4, label='Nominal Battery Power')
     plt.plot(time, pl, linewidth=4, label='Expected Prosumption')
+    plt.plot(time, pl_gt, linewidth=4, label='Ground Truth prosumption')
     plt.plot(time, pg_nom, linewidth=4, label='Grid Power')
-    plt.plot(time, pg_exp_low_cond, linewidth=1, label='Expectation of downward deviations from Grid Power (Conditional)', color='navy')
-    plt.plot(time, pg_exp_high_cond, linewidth=1, label='Expectation of upward deviations from Grid Power (Conditional)', color='navy')
-    plt.plot(time, prob_low, linewidth=1, label='Probability of downward deviations from Grid Power', color='magenta')
-    plt.plot(time, prob_high, linewidth=1, label='Probability of upward deviations from Grid Power', color='magenta')
+    #plt.plot(time, pg_exp_low_cond, linewidth=1, label='Expectation of downward deviations from Grid Power (Conditional)', color='navy')
+    #plt.plot(time, pg_exp_high_cond, linewidth=1, label='Expectation of upward deviations from Grid Power (Conditional)', color='navy')
+    #plt.plot(time, prob_low, linewidth=1, label='Probability of downward deviations from Grid Power', color='magenta')
+    #plt.plot(time, prob_high, linewidth=1, label='Probability of upward deviations from Grid Power', color='magenta')
     plt.grid()
     plt.legend()
     plt.title('Power Exchange')
