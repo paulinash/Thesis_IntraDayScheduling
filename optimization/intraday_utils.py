@@ -18,7 +18,7 @@ def get_gt(model):
         gt = gt.loc[timeframe[0]:timeframe[1]]
     return gt
 
-def adjust_time_horizon(x, start, end):
+def adjust_time_horizon(x, start, end=24):
     # gets dictionary and slices it to corect time horizon via a list
     # TODO could be wrong
     items = list(x.items())
@@ -43,11 +43,11 @@ def get_ground_truth_pg_pb(model):
     pl = [model.model.pl[t] for t in model.model.time]
     pl_gt = get_gt(model)
 
-    # TODO get correct timeframe for pl_gt (otherise always 24 long)
+    # adjust pl_gt to correct length for intra day problems
     length = len(low_x)
+    pl_gt = list(pl_gt.values.flatten())[-length:]
 
-
-    delta_pl = [x-y for x,y in zip(pl_gt.values.flatten().tolist(), pl)]
+    delta_pl = [x-y for x,y in zip(pl_gt, pl)]
 
     pb_nom_gt = np.empty(len(pl))
     pg_nom_gt = np.empty(len(pl))

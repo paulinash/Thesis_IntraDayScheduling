@@ -142,9 +142,7 @@ def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
         pg_quantile_low.append(pg_quantile_low[-1])
         pg_quantile_high.append(pg_quantile_high[-1])
         gt_pg.append(gt_pg[-1])
-        #print(gt_pg)
-        #print(len(gt_pg))
-
+        
         if color_counter == 0:
             ax.step(time, pg_nom, label='DiS', color=colors[color_counter], linewidth=2, where='post')
             ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color=colors[color_counter], linewidth=1.5, where='post')
