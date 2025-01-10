@@ -22,7 +22,7 @@ def plot_battery_evolution_intra(models):
     fig, ax = plt.subplots(figsize=(10, 6))
 
     color_counter = 0
-    whole_gt = []
+    whole_e_gt = np.empty(25)
     # TODO plot the whole ground truth in black
     for model in models:
         e_nominal = list(model.model.e_nom.get_values().values())
@@ -31,6 +31,9 @@ def plot_battery_evolution_intra(models):
         # get ground truth battery evolution
         gt_pg, gt_pb = get_ground_truth_pg_pb(model)
         e_gt = get_gt_battery_evolution(model, gt_pb)
+        start = len(e_gt)
+        whole_e_gt[-start:] = e_gt
+        print(len(whole_e_gt))
 
         e_max = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_max)]
         e_min = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_min)]
@@ -41,6 +44,7 @@ def plot_battery_evolution_intra(models):
         if color_counter == 0:
             ax.plot(time_e, e_nominal, color=colors[color_counter], linewidth=2, label='Nominal Battery State')
             ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed', label='Ground truth battery state')
+            first_time_e = time_e
             first_ordered_time_e = ordered_time_e
         else:
             ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed')
@@ -52,6 +56,7 @@ def plot_battery_evolution_intra(models):
         color_counter = color_counter + 1 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
+    ax.plot(first_time_e, whole_e_gt, color='black', linestyle='--', linewidth='2', label='Whole Ground Truth')
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, first_ordered_time_e)))
     plt.xticks(np.arange(0, len(first_ordered_time_e), 2), rotation=45)
