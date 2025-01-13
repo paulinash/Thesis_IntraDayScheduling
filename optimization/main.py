@@ -37,7 +37,7 @@ def main():
 
 
     #### Intra Day Approach
-    time_slots = [4,6,8,10,16]
+    time_slots = [6,8,10,12,16]
     models = solve_intra_day_problems(model, forecasts, params, time_slots)
 
     postprocess_results_intra(models)

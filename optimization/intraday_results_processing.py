@@ -6,10 +6,10 @@ from intraday_utils import get_ground_truth_pg_pb, get_gt_battery_evolution
 import numpy as np
 import os
 
-colors = ['#ddcc77', '#88ccee', '#44aa99', '#117733', '#332288', '#cc6677', '#cc6677']
+colors = ['#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff', '#43AA8B']
 
 def postprocess_results_intra(models):
-    ''' Postprocess the results of the optimization. '''
+    ''' Postprocess the results of the intraday optimizations. '''
 
     plot_battery_evolution_intra(models)
 
@@ -23,7 +23,6 @@ def plot_battery_evolution_intra(models):
 
     color_counter = 0
     whole_e_gt = np.empty(25)
-    # TODO plot the whole ground truth in black
     for model in models:
         e_nominal = list(model.model.e_nom.get_values().values())
         e_prob_max = list(model.model.e_max.get_values().values())
@@ -33,7 +32,6 @@ def plot_battery_evolution_intra(models):
         e_gt = get_gt_battery_evolution(model, gt_pb)
         start = len(e_gt)
         whole_e_gt[-start:] = e_gt
-        print(len(whole_e_gt))
 
         e_max = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_max)]
         e_min = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_min)]
@@ -56,7 +54,7 @@ def plot_battery_evolution_intra(models):
         color_counter = color_counter + 1 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
-    ax.plot(first_time_e, whole_e_gt, color='black', linestyle='--', linewidth='2', label='Whole Ground Truth')
+    ax.plot(first_time_e, whole_e_gt, color='black', linewidth='2', label='Whole Ground Truth')
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, first_ordered_time_e)))
     plt.xticks(np.arange(0, len(first_ordered_time_e), 2), rotation=45)
@@ -107,12 +105,14 @@ def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
     fig, ax = plt.subplots(figsize=(10, 6))
 
     color_counter = 0
-    
+    whole_pg_gt = np.empty(24)
+
     for model in models:
         time = [str(t.hour) for t in model.model.time]
         ordered_time = model.model.time.ordered_data()
         pg_nom = list(model.model.pg_nom.get_values().values())
 
+       
         # Get quantiles
         quant_low, quant_high  = quantiles
         pg_quantile_low, pg_quantile_high = compute_quantiles(model, quantiles)
@@ -128,6 +128,10 @@ def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
         # Ground truth
         gt_pg, gt_pb = get_ground_truth_pg_pb(model)
         gt_pg = list(gt_pg)
+        
+        # Whole ground truth
+        start = len(pg_nom)
+        whole_pg_gt[-start:] = gt_pg
         
         # Ensure that the conditional expected deviations are within the quantiles for visualization purposes.
         # With specifying the quantiles, we limit the range that interests us. Thus, the conditional expected deviations
@@ -153,13 +157,19 @@ def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
             ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color=colors[color_counter], linewidth=1.5, where='post')
             ax.step(time, gt_pg, label='Ground truth', color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
             first_ordered_time = ordered_time
+            first_time = time
         else:
             ax.step(time, pg_nom, color=colors[color_counter], linewidth=2, where='post')
             ax.step(time, np.ravel(pg_quantile_low), '--', color=colors[color_counter], linewidth=1.5, where='post')
             ax.step(time, gt_pg, color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
-
+            
         ax.step(time, np.ravel(pg_quantile_high), '--', color=colors[color_counter], linewidth=1.5, where='post')
         color_counter = color_counter + 1
+    
+    whole_pg_gt = list(whole_pg_gt)
+    whole_pg_gt.append(whole_pg_gt[-1])
+    ax.step(first_time, whole_pg_gt, color='black', linewidth='1', label='Whole Ground Truth', where='post')
+
     # TODO use later for prob plot
     #probs_low = list(model.model.prob_low.get_values().values())
     #probs_high = list(model.model.prob_high.get_values().values())
