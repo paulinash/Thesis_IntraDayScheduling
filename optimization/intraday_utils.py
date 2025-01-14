@@ -67,7 +67,33 @@ def get_ground_truth_pg_pb(model):
 
     return pg_nom_gt, pb_nom_gt
     
+def compute_quantiles(model, quantiles=[0.05, 0.95]):
+    pg_nom = list(model.model.pg_nom.get_values().values())
 
+    quant_low, quant_high  = quantiles
+    # Compute the quantiles of the prosumption uncertainty
+    prosumption_low = []
+    prosumption_high = []
+    for t in model.model.time:
+        # Function with form cdf(x) - quantile = 0
+        func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_low
+        func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_high
+        prosumption_low_temp = fsolve(func_temp_low, x0=-0.5)[0]
+        prosumption_high_temp = fsolve(func_temp_high, x0=0.5)[0]
+        prosumption_low.append(prosumption_low_temp)
+        prosumption_high.append(prosumption_high_temp)
+    # Compute the quantile values of the truncated distribution (i.e. the grid power uncertainty)
+    pg_truncated_quantile_low = []
+    pg_truncated_quantile_high = []
+    for i in range(len(prosumption_low)):
+        pg_trunc_low_temp = prosumption_low[i] - model.model.x_low[model.model.time.at(i+1)].value
+        pg_trunc_high_temp = prosumption_high[i] - model.model.x_high[model.model.time.at(i+1)].value
+        pg_truncated_quantile_low.append(pg_trunc_low_temp)
+        pg_truncated_quantile_high.append(pg_trunc_high_temp)
+    # Shift the uncertaintites to represent quantiles of the deviations from the nominal grid power
+    pg_quantile_low = [pg_nomi + deviation if deviation < 0 else pg_nomi for pg_nomi, deviation in zip(pg_nom, pg_truncated_quantile_low)]
+    pg_quantile_high = [pg_nomi + deviation if deviation > 0 else pg_nomi for pg_nomi, deviation in zip(pg_nom, pg_truncated_quantile_high)]
+    return pg_quantile_low, pg_quantile_high
 
 
 
