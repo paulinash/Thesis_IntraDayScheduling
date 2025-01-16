@@ -56,7 +56,7 @@ def plot_battery_evolution_intra(models):
 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
-    ax.plot(first_time_e, whole_e_gt, color='black', linewidth='2', label='Whole Ground Truth')
+    ax.plot(first_time_e, whole_e_gt, color='black', linewidth='1', label='Whole Ground Truth')
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, first_ordered_time_e)))
     plt.xticks(np.arange(0, len(first_ordered_time_e), 2), rotation=45)
@@ -100,14 +100,14 @@ def plot_costs_intra(models):
         costs_gt = [purchase_price*x if x > 0 else selling_price*x for x in gt_pg]
 
         if color_counter == 0:
-            ax.plot(time, p_plus_nom_weighted, label='Nominal Purchase price', linestyle='dotted', color=colors[color_counter], linewidth=1)
-            ax.plot(time, p_minus_nom_weighted, label='Nominal Selling price', linestyle='dashed', color=colors[color_counter], linewidth=1)
-            ax.plot(time, costs_gt, label='Ground Truth Purchase price', color=colors[color_counter], linewidth=1)
+            ax.step(time, p_plus_nom_weighted, label='Nominal Purchase price', linestyle='dotted', color=colors[color_counter], linewidth=1, where='post')
+            ax.step(time, p_minus_nom_weighted, label='Nominal Selling price', linestyle='dashed', color=colors[color_counter], linewidth=1, where='post')
+            ax.step(time, costs_gt, label='Ground Truth Purchase price', color=colors[color_counter], linewidth=1, where='post')
             first_ordered_time = ordered_time
         else:
-            ax.plot(time, costs_gt, color=colors[color_counter], linewidth=1)
-            ax.plot(time, p_plus_nom_weighted, linestyle='dotted', color=colors[color_counter], linewidth=1)
-            ax.plot(time, p_minus_nom_weighted, linestyle='dashed', color=colors[color_counter], linewidth=1)
+            ax.step(time, costs_gt, color=colors[color_counter], linewidth=1, where='post')
+            ax.step(time, p_plus_nom_weighted, linestyle='dotted', color=colors[color_counter], linewidth=1, where='post')
+            ax.step(time, p_minus_nom_weighted, linestyle='dashed', color=colors[color_counter], linewidth=1, where='post')
         color_counter = color_counter + 1
 
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
