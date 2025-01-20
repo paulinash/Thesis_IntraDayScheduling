@@ -292,9 +292,9 @@ class BaseOptimizationModel:
         def objective(model):
             return sum(
                 self.c11 * model.pg_nom_plus[t] **2 
-                + self.c12 * model.pg_nom_plus[t] 
+                #+ self.c12 * model.pg_nom_plus[t] 
                 + self.c21 * model.pg_nom_minus[t] **2 
-                + self.c22 * model.pg_nom_minus[t] # Careful with the sign here (If c22 !=0) => Does minus make more sense?
+                #+ self.c22 * model.pg_nom_minus[t] # Careful with the sign here (If c22 !=0) => Does minus make more sense?
                 - model.c31_varying[t] * model.prob_low[t] * model.exp_pg_low[t] 
                 + self.c32 * model.prob_high[t] * model.exp_pg_high[t]
                 #- self.c31 * model.exp_pg_low[t] 

@@ -11,10 +11,33 @@ colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
 def postprocess_results_intra(models):
     ''' Postprocess the results of the intraday optimizations. '''
 
+    print_objective_values(models)
     plot_battery_evolution_intra(models)
     plot_probabilities_of_deviations_intra(models)
     plot_costs_intra(models)
-    plot_probabilistic_power_schedule_intra(models)
+    #plot_probabilistic_power_schedule_intra(models)
+
+def print_objective_values(models):
+
+    model_counter = 0
+    for model in models:
+        # Grid Schedule
+        
+        if model_counter != 0:
+            pg_nom = list(model.model.pg_nom.get_values().values())
+            DiS_Schedule = list(model.day_ahead_schedule.values())
+            grid_list = [x-y for x,y in zip(pg_nom, DiS_Schedule)]
+            print(grid_list)
+
+            prob_low = list(model.model.prob_low.get_values().values())
+            prob_high = list(model.model.prob_high.get_values().values())
+            exp_pg_low = list(model.model.exp_pg_low.get_values().values())
+            exp_pg_high = list(model.model.exp_pg_high.get_values().values())
+
+            pg_nom_plus = list(model.model.pg_nom_plus.get_values().values())
+            pg_nom_minus = list(model.model.pg_nom_minus.get_values().values())
+           
+        model_counter += 1
 
 def plot_battery_evolution_intra(models):
     ''' Plots the optimal battery evolution over time. '''
