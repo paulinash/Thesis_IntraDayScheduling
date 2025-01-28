@@ -37,10 +37,10 @@ def main():
 
 
     #### Intra Day Approach
-    time_slots = [6,8,10,12,16]
-    models = solve_intra_day_problems(model, forecasts, params, time_slots)
+    time_slots = [6,8,10,12]
+    models = solve_intra_day_problems(model, forecasts, params, time_slots, timeframe)
 
-    postprocess_results_intra(models)
+    postprocess_results_intra(models, timeframe)
     print('we ran through')
 
 if __name__ == '__main__':

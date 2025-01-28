@@ -2,7 +2,7 @@ from input_data import load_forecasts, load_params, preprocess_data
 from intraday_optimization_model import IntraDayOptimizationModel
 from intraday_utils import adjust_time_horizon, get_ground_truth_pg_pb, get_gt_battery_evolution, get_gt
 
-def solve_intra_day_problems(model, forecasts, params, time_slots):
+def solve_intra_day_problems(model, forecasts, params, time_slots, timeframe):
     time_horizon = 24
     models = [model]
     model_t = model
@@ -22,7 +22,8 @@ def solve_intra_day_problems(model, forecasts, params, time_slots):
         e_prob_min = adjust_time_horizon(model_t.model.e_min.get_values(), start_time, time_horizon+1)
     
         # get initial battery state e_nominal_gt by running ground truth prosumption through allocation
-        pg_nom_gt, pb_nom_gt = get_ground_truth_pg_pb(model_t)
+        pl_gt = get_gt(timeframe)
+        pg_nom_gt, pb_nom_gt = get_ground_truth_pg_pb(model_t, pl_gt)
         e_nominal_gt = list(get_gt_battery_evolution(model_t, pb_nom_gt))
         params['e0'] = e_nominal_gt[start_time] 
 

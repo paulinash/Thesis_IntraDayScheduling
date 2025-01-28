@@ -5,13 +5,10 @@ import numpy as np
 import os
 import pandas as pd
 
-# TODO we have this timeframe here and in main. change that when that code works!
-timeframe = ['2017-04-01 06:00:00', '2017-04-02 05:00:00']  
 
-
-def get_gt(model):
+def get_gt(timeframe):
     # TODO is model here irrelevant?
-    # but it should take day as a value
+    # but it should take day as a value    
     gt = pd.read_csv('data/ground_truth/residential4_prosumption.csv', index_col=0)
     gt.index = pd.to_datetime(gt.index)
     if timeframe is not None:
@@ -34,14 +31,13 @@ def get_gt_battery_evolution(model, pb_nom_gt):
         battery_evolution[t+1] = battery_evolution[t] - model.t_inc * pb_nom_gt[t] - model.t_inc * model.mu * np.abs(pb_nom_gt[t])
     return battery_evolution
 
-def get_ground_truth_pg_pb(model):
-    # takes a model and returns the true pg and pb by using ground truth and model allocation
+def get_ground_truth_pg_pb(model, pl_gt):
+    # takes a model and the whole 24 hour ground truth and returns the true pg and pb by using ground truth and model allocation
     low_x = list(model.model.x_low.get_values().values())
     high_x = list(model.model.x_high.get_values().values())
     pg_nom = list(model.model.pg_nom.get_values().values())
     pb_nom = list(model.model.pb_nom.get_values().values())
     pl = [model.model.pl[t] for t in model.model.time]
-    pl_gt = get_gt(model)
 
     # adjust pl_gt to correct length for intra day problems
     length = len(low_x)

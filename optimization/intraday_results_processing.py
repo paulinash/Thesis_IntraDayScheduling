@@ -2,44 +2,56 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.optimize import fsolve
 from results_processing import custom_x_axis_formatter, get_file_path
-from intraday_utils import get_ground_truth_pg_pb, get_gt_battery_evolution, compute_quantiles
+from intraday_utils import get_ground_truth_pg_pb, get_gt_battery_evolution, compute_quantiles, get_gt
 import numpy as np
 import os
 
 colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
 
-def postprocess_results_intra(models):
+def postprocess_results_intra(models, timeframe):
     ''' Postprocess the results of the intraday optimizations. '''
 
     print_objective_values(models)
-    plot_battery_evolution_intra(models)
+    plot_battery_evolution_intra(models, timeframe)
     plot_probabilities_of_deviations_intra(models)
-    plot_costs_intra(models)
-    #plot_probabilistic_power_schedule_intra(models)
+    plot_costs_intra(models, timeframe)
+    plot_probabilistic_power_schedule_intra(models, timeframe)
 
 def print_objective_values(models):
+
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     model_counter = 0
     for model in models:
         # Grid Schedule
         
         if model_counter != 0:
+            time = [str(t) for t in model.model.time]
+
             pg_nom = list(model.model.pg_nom.get_values().values())
             DiS_Schedule = list(model.day_ahead_schedule.values())
-            grid_list = [x-y for x,y in zip(pg_nom, DiS_Schedule)]
-            print(grid_list)
-
+            grid_list = [(x-y)**2 for x,y in zip(pg_nom, DiS_Schedule)]
             prob_low = list(model.model.prob_low.get_values().values())
             prob_high = list(model.model.prob_high.get_values().values())
             exp_pg_low = list(model.model.exp_pg_low.get_values().values())
             exp_pg_high = list(model.model.exp_pg_high.get_values().values())
+            prob_list = [-a*b + c*d for a,b,c,d in zip(prob_low, exp_pg_low, prob_high, exp_pg_high)]
+            new_list = [a+b for a,b in zip(grid_list, prob_list)]
 
             pg_nom_plus = list(model.model.pg_nom_plus.get_values().values())
             pg_nom_minus = list(model.model.pg_nom_minus.get_values().values())
-           
-        model_counter += 1
+            pg_nom_list = [x**2+y**2 for x,y in zip(pg_nom_plus, pg_nom_minus)]
 
-def plot_battery_evolution_intra(models):
+            print('Grid cost', new_list)
+            print('Consumer cost', pg_nom_list)
+            print('###################################')
+            plt.plot(time, new_list, color='red')
+            plt.plot(time, pg_nom_list, color='blue')
+        model_counter += 1
+    plt.show()
+
+def plot_battery_evolution_intra(models, timeframe):
     ''' Plots the optimal battery evolution over time. '''
 
     plt.rcParams.update({'font.size': 15})
@@ -52,7 +64,8 @@ def plot_battery_evolution_intra(models):
         e_prob_max = list(model.model.e_max.get_values().values())
         e_prob_min = list(model.model.e_min.get_values().values())
         # get ground truth battery evolution
-        gt_pg, gt_pb = get_ground_truth_pg_pb(model)
+        pl_gt = get_gt(timeframe)
+        gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
         e_gt = get_gt_battery_evolution(model, gt_pb)
         start = len(e_gt)
         whole_e_gt[-start:] = e_gt
@@ -94,7 +107,7 @@ def plot_battery_evolution_intra(models):
     plt.savefig(file_path, dpi=200)
     #plt.show()
 
-def plot_costs_intra(models):
+def plot_costs_intra(models, timeframe):
 
     plt.rcParams.update({'font.size':15})
     fig,ax = plt.subplots(figsize=(10,6))
@@ -118,7 +131,8 @@ def plot_costs_intra(models):
         p_minus_nom_weighted = [selling_price*p for p in p_minus_nom]
 
         # Ground Truth costs
-        gt_pg, gt_pb = get_ground_truth_pg_pb(model)
+        pl_gt = get_gt(timeframe)
+        gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
         gt_pg = list(gt_pg)
         costs_gt = [purchase_price*x if x > 0 else selling_price*x for x in gt_pg]
 
@@ -180,7 +194,7 @@ def plot_probabilities_of_deviations_intra(models):
     plt.savefig(file_path, dpi=200)
 
 
-def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
+def plot_probabilistic_power_schedule_intra(models, timeframe, quantiles=[0.05, 0.95]):
     ''' Plot the probabilistic power schedule. '''
 
     # Plot the results
@@ -209,7 +223,8 @@ def plot_probabilistic_power_schedule_intra(models, quantiles=[0.05, 0.95]):
         pg_exp_high_cond = [model.model.pg_nom[t].value + model.model.exp_pg_high[t].value / model.model.prob_high[t].value for t in model.model.time]
 
         # Ground truth
-        gt_pg, gt_pb = get_ground_truth_pg_pb(model)
+        pl_gt = get_gt(timeframe)
+        gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
         gt_pg = list(gt_pg)
         
         # Whole ground truth

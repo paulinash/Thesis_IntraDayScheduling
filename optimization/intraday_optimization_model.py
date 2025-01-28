@@ -37,13 +37,11 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
 
     def _define_objective_function(self):
         def objective(model):
-            return sum(
+            return 0.9*sum(
                 (model.pg_nom[t] - self.day_ahead_schedule[t])**2
                 + (-model.prob_low[t]*model.exp_pg_low[t]
-                + model.prob_high[t]*model.exp_pg_high[t])
-                + self.c11 * model.pg_nom_plus[t]**2 
-                + self.c21 * model.pg_nom_minus[t]**2 
-                for t in model.time) 
+                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ 0.1*sum(model.pg_nom_plus[t]**2 
+                + model.pg_nom_minus[t]**2 for t in model.time)
         self.model.objective = pyo.Objective(rule=objective, sense=pyo.minimize)
 
 
