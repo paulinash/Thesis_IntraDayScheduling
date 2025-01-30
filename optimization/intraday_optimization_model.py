@@ -9,11 +9,15 @@ from utils import simpsons_rule, cdf_formula, cdf_formula_numpy, pdf_formula, dy
 class IntraDayOptimizationModel(BaseOptimizationModel):
     ''' Base class for the optimization model. '''
 
-    def __init__(self, input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max):
+    def __init__(self, input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, weight_1=0.5, weight_2=0.5, self_suff=True):
         self.day_ahead_schedule = day_ahead_schedule
         self.e_nom_old = e_nom
         self.e_prob_min_old = e_prob_min
         self.e_prob_max_old = e_prob_max
+        self.weight_1 = weight_1
+        self.weight_2 = weight_2
+        # To decide whether to promot self sufficiency or cost efficiency
+        self.self_suff = self_suff
 
         super().__init__(input_data)
         self.name = "Intra Day Optimization Model"
@@ -37,11 +41,16 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
 
     def _define_objective_function(self):
         def objective(model):
-            return 0.9*sum(
-                (model.pg_nom[t] - self.day_ahead_schedule[t])**2
-                + (-model.prob_low[t]*model.exp_pg_low[t]
-                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ 0.1*sum(model.pg_nom_plus[t]**2 
-                + model.pg_nom_minus[t]**2 for t in model.time)
+            # pg_nom_plus**2 + pg_nom_minus**2 for self sufficiency
+            # pg_nom_plus**2 - pg_nom_minus** for cost efficiency
+           
+            # Promoting self sufficiency
+            if self.self_suff:
+                return self.weight_1*sum((model.pg_nom[t] - self.day_ahead_schedule[t])**2+ (-model.prob_low[t]*model.exp_pg_low[t]
+                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ self.weight_2*sum(model.pg_nom_plus[t]**2 + model.pg_nom_minus[t]**2 for t in model.time)
+            else: # Promoting cost efficiency
+                return self.weight_1*sum((model.pg_nom[t] - self.day_ahead_schedule[t])**2+ (-model.prob_low[t]*model.exp_pg_low[t]
+                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ self.weight_2*sum(model.pg_nom_plus[t]**2 - model.pg_nom_minus[t]**2 for t in model.time)
         self.model.objective = pyo.Objective(rule=objective, sense=pyo.minimize)
 
 

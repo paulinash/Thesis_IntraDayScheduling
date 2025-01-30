@@ -2,7 +2,7 @@ from input_data import load_forecasts, load_params, preprocess_data
 from intraday_optimization_model import IntraDayOptimizationModel
 from intraday_utils import adjust_time_horizon, get_ground_truth_pg_pb, get_gt_battery_evolution, get_gt
 
-def solve_intra_day_problems(model, forecasts, params, time_slots, timeframe):
+def solve_intra_day_problems(model, forecasts, params, time_slots, timeframe, weight_1=0.5, weight_2=0.5, self_suff=True):
     time_horizon = 24
     models = [model]
     model_t = model
@@ -32,7 +32,7 @@ def solve_intra_day_problems(model, forecasts, params, time_slots, timeframe):
         input_data['fc_exp'] = input_data['fc_exp'][point_in_time:24]
         input_data['fc_weights'] = input_data['fc_weights'][point_in_time:24]
 
-        intra_day_model = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max)
+        intra_day_model = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, weight_1, weight_2, self_suff)
         result = intra_day_model.solve()
 
         models.append(intra_day_model)

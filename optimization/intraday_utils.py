@@ -7,7 +7,6 @@ import pandas as pd
 
 
 def get_gt(timeframe):
-    # TODO is model here irrelevant?
     # but it should take day as a value    
     gt = pd.read_csv('data/ground_truth/residential4_prosumption.csv', index_col=0)
     gt.index = pd.to_datetime(gt.index)
@@ -17,9 +16,8 @@ def get_gt(timeframe):
 
 def adjust_time_horizon(x, start, end=24):
     # gets dictionary and slices it to corect time horizon via a list
-    # TODO could be wrong
     items = list(x.items())
-    sliced_items = items[start-1:]
+    sliced_items = items[start:]
     return dict(sliced_items)
 
 def get_gt_battery_evolution(model, pb_nom_gt):

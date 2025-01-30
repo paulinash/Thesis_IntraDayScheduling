@@ -8,6 +8,16 @@ from results_processing import postprocess_results, validate_expected_values
 from experiment_tracking import start_experiment, log_data, end_experiment, log_results
 from intraday_solve import solve_intra_day_problems
 from intraday_results_processing import postprocess_results_intra
+from pareto_front import calculate_pareto_front_by_scalarisation
+import numpy as np
+
+show_base_results = False
+intra_day_approach = False
+pareto_front_scalarisation = True
+# TODO for scalarisation only one model is possible right now, for intra day you can choose multiple models in time_slots
+time_slots = [10]
+number_scalarisations=11
+self_suff = True
 
 def main():
     # Example 1: Normal Distribution
@@ -31,17 +41,22 @@ def main():
     model = BaseOptimizationModel(input_data)
     model.solve()
 
-    # Process and visualize the results
-    #validate_expected_values(model)
-    #postprocess_results(model)
+    ######## Process and visualize the results
+    if show_base_results:
+        validate_expected_values(model)
+        postprocess_results(model)
 
 
     #### Intra Day Approach
-    time_slots = [6,8,10,12]
-    models = solve_intra_day_problems(model, forecasts, params, time_slots, timeframe)
+    if intra_day_approach:
+        models = solve_intra_day_problems(model, forecasts, params, time_slots, timeframe)
+        postprocess_results_intra(models, timeframe)
 
-    postprocess_results_intra(models, timeframe)
-    print('we ran through')
+    ###### Scalarization Approach
+    if pareto_front_scalarisation:
+        calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations)
+
+    
 
 if __name__ == '__main__':
     main()

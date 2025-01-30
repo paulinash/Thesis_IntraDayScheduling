@@ -13,8 +13,8 @@ def postprocess_results_intra(models, timeframe):
 
     print_objective_values(models)
     plot_battery_evolution_intra(models, timeframe)
-    plot_probabilities_of_deviations_intra(models)
-    plot_costs_intra(models, timeframe)
+    #plot_probabilities_of_deviations_intra(models)
+    #plot_costs_intra(models, timeframe)
     plot_probabilistic_power_schedule_intra(models, timeframe)
 
 def print_objective_values(models):
@@ -63,6 +63,7 @@ def plot_battery_evolution_intra(models, timeframe):
         e_nominal = list(model.model.e_nom.get_values().values())
         e_prob_max = list(model.model.e_max.get_values().values())
         e_prob_min = list(model.model.e_min.get_values().values())
+        
         # get ground truth battery evolution
         pl_gt = get_gt(timeframe)
         gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
