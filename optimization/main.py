@@ -15,13 +15,13 @@ show_base_results = False
 intra_day_approach = False
 scalarisation_bool = True
 scalarisation_approach_list = ['weighted sum', 'epsilon constraint']
-scalarisation_approach = scalarisation_approach_list[1] # alternatively 'epsilon constraint'
+scalarisation_approach = scalarisation_approach_list[0] # alternatively 'epsilon constraint'
 
 
 # TODO for scalarisation only one model is possible right now, for intra day you can choose multiple models in time_slots
 time_slots = [10]
-number_scalarisations=50
-self_suff = False
+number_scalarisations=11
+self_suff = True
 
 def main():
     # Example 1: Normal Distribution

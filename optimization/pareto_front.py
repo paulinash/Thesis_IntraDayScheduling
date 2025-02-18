@@ -56,7 +56,7 @@ def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots
     weights_1 = np.linspace(0,1,number_scalarisations)
     weights_2 = [1-w for w in weights_1]
     # TODO in 'epsilon constraint' approach the epsilons list need to be found manually
-    epsilons = np.linspace(-10,-70,number_scalarisations)
+    epsilons = np.linspace(0,10,number_scalarisations)
      
 
     grid_values = []
