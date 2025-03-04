@@ -39,6 +39,7 @@ class EpsilonConstraintOptimizationModel(BaseOptimizationModel):
 
         ####################################### epsilon constraints #####################################################
         def constr_epsilon(model):
+            # self sufficiency ist constrained
             #sum(pg_nom^+**2 + pg_nom^-**2) <= epsilon_self_suff
             if self.self_suff:
                 return sum(model.pg_nom_plus[t]**2 + model.pg_nom_minus[t]**2 for t in model.time) <= self.epsilon

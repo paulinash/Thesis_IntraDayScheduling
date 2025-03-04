@@ -40,7 +40,7 @@ def plot_pareto_front(x,y, self_suff):
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6)) 
     #plt.scatter(x, y, c=colors)
-    plt.scatter(x,y)
+    plt.scatter(x,y, c='#00876C')
     plt.xlabel('Uncertainty in Grid')
     if self_suff:
         plt.ylabel('Self sufficiency costs')
@@ -56,7 +56,7 @@ def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots
     weights_1 = np.linspace(0,1,number_scalarisations)
     weights_2 = [1-w for w in weights_1]
     # TODO in 'epsilon constraint' approach the epsilons list need to be found manually
-    epsilons = np.linspace(0,10,number_scalarisations)
+    epsilons = np.linspace(21,33,number_scalarisations)
      
 
     grid_values = []
