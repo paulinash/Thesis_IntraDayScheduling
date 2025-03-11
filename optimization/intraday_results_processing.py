@@ -11,7 +11,7 @@ colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
 def postprocess_results_intra(models, timeframe):
     ''' Postprocess the results of the intraday optimizations. '''
 
-    print_objective_values(models)
+    #print_objective_values(models)
     plot_battery_evolution_intra(models, timeframe)
     #plot_probabilities_of_deviations_intra(models)
     #plot_costs_intra(models, timeframe)
@@ -28,9 +28,9 @@ def print_objective_values(models):
         
         if model_counter != 0:
             time = [str(t) for t in model.model.time]
-
             pg_nom = list(model.model.pg_nom.get_values().values())
             DiS_Schedule = list(model.day_ahead_schedule.values())
+            # TODO because Dis-Schedule is now shorter (20 in first run), this affects the other quantities
             grid_list = [(x-y)**2 for x,y in zip(pg_nom, DiS_Schedule)]
             prob_low = list(model.model.prob_low.get_values().values())
             prob_high = list(model.model.prob_high.get_values().values())
@@ -43,10 +43,8 @@ def print_objective_values(models):
             pg_nom_minus = list(model.model.pg_nom_minus.get_values().values())
             pg_nom_list = [x**2+y**2 for x,y in zip(pg_nom_plus, pg_nom_minus)]
 
-            print('Grid cost', new_list)
-            print('Consumer cost', pg_nom_list)
-            print('###################################')
-            plt.plot(time, new_list, color='red')
+    
+            plt.plot(time, new_list, color='red')# TODO thus we land at an error
             plt.plot(time, pg_nom_list, color='blue')
         model_counter += 1
     plt.show()

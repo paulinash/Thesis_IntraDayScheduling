@@ -14,7 +14,7 @@ def get_gt(timeframe):
         gt = gt.loc[timeframe[0]:timeframe[1]]
     return gt
 
-def adjust_time_horizon(x, start, end=24):
+def adjust_time_horizon(x, start):
     # gets dictionary and slices it to corect time horizon via a list
     items = list(x.items())
     sliced_items = items[start:]
@@ -31,6 +31,8 @@ def get_gt_battery_evolution(model, pb_nom_gt):
 
 def get_ground_truth_pg_pb(model, pl_gt):
     # takes a model and the whole 24 hour ground truth and returns the true pg and pb by using ground truth and model allocation
+
+    # these are 24 hour arrays from the old problem
     low_x = list(model.model.x_low.get_values().values())
     high_x = list(model.model.x_high.get_values().values())
     pg_nom = list(model.model.pg_nom.get_values().values())
@@ -39,8 +41,7 @@ def get_ground_truth_pg_pb(model, pl_gt):
 
     # adjust pl_gt to correct length for intra day problems
     length = len(low_x)
-    pl_gt = list(pl_gt.values.flatten())[-length:]
-
+    pl_gt = list(pl_gt.values.flatten())[-length:] # this is also 24 hour true prosumption values
     delta_pl = [x-y for x,y in zip(pl_gt, pl)]
 
     pb_nom_gt = np.empty(len(pl))
@@ -61,6 +62,8 @@ def get_ground_truth_pg_pb(model, pl_gt):
 
     return pg_nom_gt, pb_nom_gt
     
+
+
 def compute_quantiles(model, quantiles=[0.05, 0.95]):
     pg_nom = list(model.model.pg_nom.get_values().values())
 
@@ -70,8 +73,8 @@ def compute_quantiles(model, quantiles=[0.05, 0.95]):
     prosumption_high = []
     for t in model.model.time:
         # Function with form cdf(x) - quantile = 0
-        func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_low
-        func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_high
+        func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t], n=10) - quant_low
+        func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t], n=10) - quant_high
         prosumption_low_temp = fsolve(func_temp_low, x0=-0.5)[0]
         prosumption_high_temp = fsolve(func_temp_high, x0=0.5)[0]
         prosumption_low.append(prosumption_low_temp)

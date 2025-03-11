@@ -30,12 +30,18 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
         ######################################## battery constraints ###################################################
         def constr_e_limit_min(model, t):
             ''' e_nom[t] + e_min[t] >= e_nom_old + e_prob_min_old '''
-            return model.e_nom[t] + model.e_min[t] >= self.e_nom_old[t] + self.e_prob_min_old[t]
+            if self.e_nom_old.get(t) is None: # this is for the last hour where we do not have a restriction from the previous problem
+                return model.e_nom[t] + model.e_min[t] >= self.e_limit_min
+            else:
+                return model.e_nom[t] + model.e_min[t] >= self.e_nom_old[t] + self.e_prob_min_old[t]
         self.model.constr_e_limit_min = pyo.Constraint(self.model.time_e, rule=constr_e_limit_min)
 
         def constr_e_limit_max(model, t):
             ''' e_nom[t] + e_max[t] <= e_nom_old + e_prob_max_old '''
-            return model.e_nom[t] + model.e_max[t] <= self.e_nom_old[t] + self.e_prob_max_old[t]
+            if self.e_nom_old.get(t) is None:
+                return model.e_nom[t] + model.e_max[t] <= self.e_limit_max
+            else:
+                return model.e_nom[t] + model.e_max[t] <= self.e_nom_old[t] + self.e_prob_max_old[t]
         self.model.constr_e_limit_max = pyo.Constraint(self.model.time_e, rule=constr_e_limit_max)
 
 
@@ -46,11 +52,25 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
            
             # Promoting self sufficiency
             if self.self_suff:
-                return self.weight_1*sum((model.pg_nom[t] - self.day_ahead_schedule[t])**2+ (-model.prob_low[t]*model.exp_pg_low[t]
-                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ self.weight_2*sum(model.pg_nom_plus[t]**2 + model.pg_nom_minus[t]**2 for t in model.time)
+                return (
+                    self.weight_1*sum(
+                        (model.pg_nom[t] - self.day_ahead_schedule[t])**2 for t in set(model.time) & set(self.day_ahead_schedule.keys())
+                    )
+                    + self.weight_1*sum(
+                        -model.prob_low[t]*model.exp_pg_low[t] + model.prob_high[t]*model.exp_pg_high[t] for t in model.time
+                    )
+                    + self.weight_2*sum(model.pg_nom_plus[t]**2 + model.pg_nom_minus[t]**2 for t in model.time)
+                )
             else: # Promoting cost efficiency
-                return self.weight_1*sum((model.pg_nom[t] - self.day_ahead_schedule[t])**2+ (-model.prob_low[t]*model.exp_pg_low[t]
-                + model.prob_high[t]*model.exp_pg_high[t]) for t in model.time)+ self.weight_2*sum(model.pg_nom_plus[t]**2 - model.pg_nom_minus[t]**2 for t in model.time)
+                 return (
+                    self.weight_1*sum(
+                        (model.pg_nom[t] - self.day_ahead_schedule[t])**2 for t in set(model.time) & set(self.day_ahead_schedule.keys())
+                    )
+                    + self.weight_1*sum(
+                        -model.prob_low[t]*model.exp_pg_low[t] + model.prob_high[t]*model.exp_pg_high[t] for t in model.time
+                    )
+                    + self.weight_2*sum(model.pg_nom_plus[t]**2 - model.pg_nom_minus[t]**2 for t in model.time)
+                )
         self.model.objective = pyo.Objective(rule=objective, sense=pyo.minimize)
 
 

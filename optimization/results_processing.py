@@ -6,12 +6,12 @@ from intraday_utils import get_gt
 import numpy as np
 import os
 
-def postprocess_results(model):
+def postprocess_results(model, time_frame):
     ''' Postprocess the results of the optimization. '''
 
     plot_battery_evolution(model)
 
-    plot_power_exchange(model)
+    #plot_power_exchange(model, time_frame)
 
     plot_probabilistic_power_schedule(model)
 
@@ -56,13 +56,13 @@ def plot_battery_evolution(model):
     plt.savefig(file_path, dpi=200)
     #plt.show()
 
-def plot_power_exchange(model):
+def plot_power_exchange(model, time_frame):
     ''' Plots the power exchange over time.'''
 
     pg_nom = list(model.model.pg_nom.get_values().values())
     pb_nom = list(model.model.pb_nom.get_values().values())
     pl = [model.model.pl[t] for t in model.model.time]
-    pl_gt = get_gt(model)
+    pl_gt = get_gt(time_frame)
 
     pg_exp_low_cond = [model.model.pg_nom[t].value + model.model.exp_pg_low[t].value / model.model.prob_low[t].value for t in model.model.time]
     pg_exp_high_cond = [model.model.pg_nom[t].value + model.model.exp_pg_high[t].value / model.model.prob_high[t].value for t in model.model.time]
@@ -103,8 +103,12 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     prosumption_high = []
     for t in model.model.time:
         # Function with form cdf(x) - quantile = 0
-        func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_low
-        func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_high
+        if model.probability_distribution_name == 'sum-2-gaussian-distributions':
+            func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t],n=10) - quant_low
+            func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t],n=10) - quant_high
+        else:
+            func_temp_low = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_low
+            func_temp_high = lambda x: model.cdf_numpy(x, *model.model.pdf_weights[t]) - quant_high
 
         prosumption_low_temp = fsolve(func_temp_low, x0=-0.5)[0]
         prosumption_high_temp = fsolve(func_temp_high, x0=0.5)[0]
