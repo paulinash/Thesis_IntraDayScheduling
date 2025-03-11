@@ -9,15 +9,16 @@ from experiment_tracking import start_experiment, log_data, end_experiment, log_
 from intraday_solve import solve_intra_day_problems, solve_intra_day_problems_rolling_horizon
 from intraday_results_processing import postprocess_results_intra
 from intraday_results_processing_rolling_horizon import postprocess_results_intra_rolling_horizon
-from pareto_front import calculate_pareto_front_by_scalarisation, calculate_pareto_front_by_scalarisation_rolling_horizon
+from pareto_front import calculate_pareto_front_by_scalarisation, calculate_pareto_front_by_scalarisation_rolling_horizon, calculate_multiple_pareto_fronts
 from utils import get_24_hour_timeframe
 import numpy as np
 
 show_base_results = False
-intra_day_approach = True
+intra_day_approach = False
 scalarisation_bool = False
 scalarisation_approach_list = ['weighted sum', 'epsilon constraint']
 scalarisation_approach = scalarisation_approach_list[0] # alternatively 'epsilon constraint'
+multiple_pareto_fronts = True
 
 
 # TODO for scalarisation only one model is possible right now, for intra day you can choose multiple models in time_slots
@@ -57,6 +58,9 @@ def main_2():
         # TODO for more than 1 time slot
         calculate_pareto_front_by_scalarisation_rolling_horizon(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path)
 
+    #### Pareto fronts for MULTIPLE time_slots with rolling horizon
+    if multiple_pareto_fronts:
+        calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path)
     
 if __name__ == '__main__':
     main_2()

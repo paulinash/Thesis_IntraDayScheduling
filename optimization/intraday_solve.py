@@ -4,6 +4,7 @@ from epsilon_const_optimization_model import EpsilonConstraintOptimizationModel
 from intraday_utils import adjust_time_horizon, get_ground_truth_pg_pb, get_gt_battery_evolution, get_gt
 from utils import get_24_hour_timeframe
 import matplotlib.pyplot as plt
+import numpy as np
 
 def solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slots, timeframe, scalarisation, params_path, weight_1=0.5, weight_2=0.5, epsilon=10, self_suff=True):
     models = [model]
@@ -110,4 +111,3 @@ def solve_intra_day_problems(model, forecasts, params, time_slots, timeframe, sc
         old_time = new_time
 
     return models
-    
