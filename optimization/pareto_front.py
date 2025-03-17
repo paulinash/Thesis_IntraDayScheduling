@@ -9,7 +9,6 @@ import numpy as np
 from utils import get_24_hour_timeframe
 from intraday_utils import adjust_time_horizon, get_ground_truth_pg_pb, get_gt_battery_evolution, get_gt
 
-# TODO this whole class only works for 1 model
 colors = ['yellow', 'gold', 'goldenrod', 'darkgoldenrod', 'peru', 'chocolate', 'saddlebrown', 'olive', 'darkolivegreen', 'dimgray', 'black']
 
 def get_objective_values_1m(model, self_suff=True):
@@ -155,10 +154,13 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         weighted_models = []
         for i in range(number_scalarisations):
             if scalarisation_approach == 'weighted sum':
+                # TODO INCLUDE COSTS
                 weighted_model = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, weights_1[i], weights_2[i], self_suff)
             elif scalarisation_approach == 'epsilon constraint':
+                # TODO INCLUDE COSTS
                 weighted_model = EpsilonConstraintOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, epsilons[i], self_suff)
             weighted_model.solve()
+            # TODO INCLUDE COSTS
             grid_value, price_value = get_objective_values_1m(weighted_model, self_suff)
             grid_values.append(grid_value)
             price_values.append(price_value)

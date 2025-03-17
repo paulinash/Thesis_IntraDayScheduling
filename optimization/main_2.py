@@ -14,11 +14,12 @@ from utils import get_24_hour_timeframe
 import numpy as np
 
 show_base_results = False
-intra_day_approach = False
+intra_day_approach = True
 scalarisation_bool = False
 scalarisation_approach_list = ['weighted sum', 'epsilon constraint']
 scalarisation_approach = scalarisation_approach_list[0] # alternatively 'epsilon constraint'
-multiple_pareto_fronts = True
+multiple_pareto_fronts = False
+dynamic_costs = False
 
 
 # TODO for scalarisation only one model is possible right now, for intra day you can choose multiple models in time_slots

@@ -37,6 +37,23 @@ def load_forecasts(folder_path, timeframe=None):
 
     return {'fc_exp': fc_exp, 'fc_weights': fc_weights}
 
+def load_costs(folder_path, timeframe=None):
+    fc_costs_path = folder_path + 'electricity_prices_2017_germany.csv'
+    fc_costs = pd.read_csv(fc_costs_path, sep=';',index_col=0, parse_dates=True, skiprows=1)
+    fc_costs.index = pd.to_datetime(fc_costs.index, errors='coerce')
+    if timeframe is not None:
+        fc_costs = fc_costs.loc[timeframe[0]:timeframe[1]]
+
+    if fc_costs.index.freq is None:
+        try:
+            fc_costs.index.freq = pd.infer_freq(fc_costs.index)
+        except ValueError:
+            print('ValueError: Specified timeframe is either not part of the forecasts or too short to infer frequency. Adjust the timeframe to match the specified forecasts.')
+            sys.exit(1)
+
+    fc_costs = fc_costs.iloc[:,0]
+    
+    return [fc_costs]
 
 def load_params(path):
     ''' Load the parameters from the specified json file. '''
