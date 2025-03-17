@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from mpl_toolkits.mplot3d import Axes3D
 from input_data import load_forecasts, load_params, preprocess_data
 from intraday_optimization_model import IntraDayOptimizationModel
 from epsilon_const_optimization_model import EpsilonConstraintOptimizationModel
@@ -56,6 +57,36 @@ def plot_pareto_front(x,y, self_suff, color='#00876C'):
     file_path = get_file_path('pareto_front.png')
     plt.savefig(file_path, dpi=200)
     #plt.show()
+
+def plot_3d_pareto_fronts(grid_values_array, price_values_array):
+        # TODO change this to actual time steps
+        time_steps = np.array([0,1,2,3])
+
+        grid_values_array = np.array(grid_values_array)
+        price_values_array = np.array(price_values_array)
+        
+        # Create meshgrid for surface plot
+        X, Y = np.meshgrid(grid_values_array[0], time_steps)  # X = index, Y = time steps
+        Z = price_values_array  # Grid values as Z-axis
+
+        fig = plt.figure(figsize=(10, 7))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Plot the surface
+        surf = ax.plot_surface(X, Y, Z, cmap='viridis', edgecolor='k')
+        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
+        # Labels
+        ax.set_xlabel('Grid Values')
+        ax.set_ylabel('Time')
+        ax.set_zlabel('Price Values')
+
+        # Title and legend
+        ax.set_title('3D Plot of Grid and Price Values Over Time')
+        ax.legend()
+        ax.view_init(elev=20, azim=120)
+        # Show plot
+        plt.show()
+
 
     
 def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation):
@@ -146,7 +177,7 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         #### Now iterate through different weights to obtain a pareto front ###
         weights_1 = np.linspace(0,1,number_scalarisations)
         weights_2 = [1-w for w in weights_1]
-        epsilons = np.linspace(10,33,number_scalarisations)
+        epsilons = np.linspace(10,30,number_scalarisations)
         ## TODO in 'epsilon constraint' approach the epsilons list need to be found manually
 
         grid_values = []
@@ -165,23 +196,27 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
             grid_values.append(grid_value)
             price_values.append(price_value)
             weighted_models.append(weighted_model)
-        plot_pareto_front(grid_values, price_values, self_suff, color=colors[counter])
+        # only plots 1 pareto front
+        #plot_pareto_front(grid_values, price_values, self_suff, color=colors[counter])
 
-            
         grid_values_array.append(grid_values)
         price_values_array.append(price_values)
 
         # TODO somehow choose a specific model of the ones in weighted_models (list of models for specific timestep with different weights)
         # right now, just take 10th
-        chosen_policy_model = weighted_models[10]
+        chosen_policy_model = weighted_models[5]
         models.append(chosen_policy_model)
 
         # model_t is the model in the timestep before so we get the variables from this model for the next round
         model_t = chosen_policy_model
         old_time = new_time
         counter = counter+1
-    plt.show()
+    print(grid_values_array)
+    print(price_values_array)
+    plot_3d_pareto_fronts(grid_values_array, price_values_array)
+    #plt.show()
 
+    
 
         
     
