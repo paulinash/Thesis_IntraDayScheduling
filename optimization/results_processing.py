@@ -6,6 +6,8 @@ from intraday_utils import get_gt
 import numpy as np
 import os
 
+colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
+
 def postprocess_results(model, time_frame):
     ''' Postprocess the results of the optimization. '''
 
@@ -32,15 +34,15 @@ def plot_battery_evolution(model):
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.plot(time_e, e_nominal, '-', color='limegreen', linewidth=3, label='Nominal Battery State')
-    ax.plot(time_e, e_exp, linewidth=2, color='navy', label='Expected Battery State')
-    ax.plot(time_e, e_min, linewidth=2, color='magenta', label='Min/Max Battery State')
-    ax.plot(time_e, e_max, linewidth=2, color='magenta')
+    ax.plot(time_e, e_nominal, '-', color=colors[0], linewidth=3, label='Nominal Battery State')
+    #ax.plot(time_e, e_exp, linewidth=2, color='navy', label='Expected Battery State')
+    ax.plot(time_e, e_min, linewidth=2, color=colors[3], label='Min/Max Battery State')
+    ax.plot(time_e, e_max, linewidth=2, color=colors[3])
 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
 
-    ax.fill_between(time_e, e_min, e_max, color='limegreen', alpha=0.2)
+    ax.fill_between(time_e, e_min, e_max, color=colors[0], alpha=0.2)
 
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, ordered_time_e)))
@@ -160,11 +162,12 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.step(time, pg_nom, label='Nominal Grid Power', color='limegreen', linewidth=5, where='post')
+    ax.step(time, pg_nom, label='Nominal Grid Power', color=colors[0], linewidth=5, where='post')
     #ax.step(time, pg_exp_low, label='Expectation of Deviations', color='aqua', linewidth=2, where='post')
     #ax.step(time, pg_exp_high, color='aqua', linewidth=2, where='post')
-    ax.step(time, pg_exp_low_cond, label='Expectation of Deviations', color='navy', linewidth=2, where='post')
-    ax.step(time, pg_exp_high_cond, color='navy', linewidth=2, where='post')
+    ax.step(time, pg_exp_low_cond, label='Expectation of Deviations', color='mediumblue', linewidth=2, where='post')
+    ax.step(time, pg_exp_high_cond, color='mediumblue', linewidth=2, where='post')
+
 
     ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color='black', linewidth=1.5, where='post')
     ax.step(time, np.ravel(pg_quantile_high), '--', color='black', linewidth=1.5, where='post')
@@ -212,7 +215,9 @@ def custom_x_axis_formatter(x, pos, time):
     index = int(x) if x < len(time) else len(time) - 1
     date = time[index]  # Access the corresponding Timestamp
     if date.hour == 0 or index == 0:  # First tick of the day
-        return date.strftime('%d/%m/%Y\n%H:%M')  # Show "DD/MM HH"
+        return date.strftime('%H:%M')  # Show "DD/MM HH"
+        # OLD: show DD/MM/YYYY, but then it was overlapping
+        #return date.strftime('%d/%m/%Y\n%H:%M')  # Show "DD/MM HH"
     else:
         return date.strftime('%H:%M')  # Otherwise show "HH:MM"
 

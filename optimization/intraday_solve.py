@@ -17,12 +17,13 @@ def solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slot
         start_time = new_time - old_time
         
         # convert to list to slice and then convert back to dictionary
-        day_ahead_schedule = adjust_time_horizon(model.model.pg_nom.get_values(), point_in_time) # here model.model because we always take schedule from model 1
-
+        day_ahead_schedule = adjust_time_horizon(model_t.model.pg_nom.get_values(), start_time) # here model.model because we always take schedule from model 1
+        
         # this gets us values from k until end of e_nom from last problem
         e_nom = adjust_time_horizon(model_t.model.e_nom.get_values(), start_time) 
         e_prob_max = adjust_time_horizon(model_t.model.e_max.get_values(), start_time)
         e_prob_min = adjust_time_horizon(model_t.model.e_min.get_values(), start_time)
+        print(len(e_nom))
 
         #### get input data, consider data for hour k till k+24
         hour = point_in_time + 6
