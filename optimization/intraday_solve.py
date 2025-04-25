@@ -23,7 +23,6 @@ def solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slot
         e_nom = adjust_time_horizon(model_t.model.e_nom.get_values(), start_time) 
         e_prob_max = adjust_time_horizon(model_t.model.e_max.get_values(), start_time)
         e_prob_min = adjust_time_horizon(model_t.model.e_min.get_values(), start_time)
-        print(len(e_nom))
 
         #### get input data, consider data for hour k till k+24
         hour = point_in_time + 6

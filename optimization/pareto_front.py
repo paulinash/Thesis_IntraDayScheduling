@@ -12,6 +12,14 @@ from intraday_utils import adjust_time_horizon, get_ground_truth_pg_pb, get_gt_b
 
 colors = ['yellow', 'gold', 'goldenrod', 'darkgoldenrod', 'peru', 'chocolate', 'saddlebrown', 'olive', 'darkolivegreen', 'dimgray', 'black']
 
+def calculate_eucl_weighted_distance(x,y,w):
+     x1,x2 = x
+     y1,y2 = y
+     w1,w2 = w
+     return np.sqrt(w1*(x1-y1)**2 + w2*(x2-y2)**2)
+
+        
+    
 def get_objective_values_1m(model, self_suff=True):
     # obtains a model and returns the sum of values related to grid uncertainty in obj function and related to self sufficiency
     pg_nom = np.array(list(model.model.pg_nom.get_values().values()))
@@ -30,7 +38,8 @@ def get_objective_values_1m(model, self_suff=True):
 
     # List that contains all values of objective function that consider grid uncertainty
     sum_grid = sum(schedule_list) + sum(prob_list)
-
+    print('Deviation ', sum(schedule_list))
+    print('Uncertainty ', sum(prob_list))
     pg_nom_plus = np.array(list(model.model.pg_nom_plus.get_values().values()))
     pg_nom_minus = np.array(list(model.model.pg_nom_minus.get_values().values()))
 
@@ -40,6 +49,7 @@ def get_objective_values_1m(model, self_suff=True):
     else: # Promoting cost efficiency
         price_list = model.c11*pg_nom_plus**2 - model.c21*pg_nom_minus**2
     sum_price = sum(price_list)
+    print('self suff', sum(price_list))
     return sum_grid, sum_price
 
 
@@ -59,16 +69,15 @@ def plot_pareto_front(x,y, self_suff, color='#00876C'):
     #plt.show()
 
 
-def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price):
+def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list):
         # TODO change this to actual time steps
-        time_steps = np.array([0,1,2,3,4])
+        hours_list = np.array(hours_list)
+        time_steps = np.arange(len(hours_list))
         grid_values_array = np.array(grid_values_array)
         price_values_array = np.array(price_values_array)
         chosen_policy_grid = np.array(chosen_policy_grid)
         chosen_policy_price = np.array(chosen_policy_price)
-        print('###################################')
-        print(chosen_policy_price)
-        print(chosen_policy_grid)
+        
 
         fig = plt.figure(figsize=(10, 7))
         ax = fig.add_subplot(111, projection='3d')
@@ -86,10 +95,23 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
             fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
         elif lines:
             # Loop through time steps and plot a separate line for each one
+            colors = plt.cm.viridis(np.linspace(0, 1, len(time_steps)))
+
             for i, t in enumerate(time_steps):
                 grid_vals = grid_values_array[i]
                 price_vals = price_values_array[i]
-                ax.plot(grid_vals, [t]*len(grid_vals), price_vals, label=f'Time {t}')  # X=Grid, Y=Time, Z=Price
+                ax.plot(grid_vals, [t]*len(grid_vals), price_vals, label=f'Time {hours_list[i]}' if t==0 or t==time_steps[-1] else None, color = colors[i])  # X=Grid, Y=Time, Z=Price
+                # Plot the chosen policy point in red
+                ax.scatter(
+                    chosen_policy_grid[i],     # X
+                    t,                         # Y
+                    chosen_policy_price[i],   # Z
+                    facecolors='none',
+                    edgecolors='red',
+                    s=60,                      # slightly bigger for emphasis
+                    marker='o',
+                    label=f'Chosen Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
+                )
         elif dots:
             # Use a colormap to assign different colors to each time step
             colors = plt.cm.viridis(np.linspace(0, 1, len(time_steps)))
@@ -102,8 +124,8 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
                     [t]*len(grid_vals),     # Y = time
                     price_vals,             # Z = price
                     color=colors[i],
-                    label=f'Time {t}',
-                    s=30  # point size
+                    label=f'Time {hours_list[i]}' if t==0 or t==time_steps[-1] else None,
+                    s=20  # point size
                 )
                 # Plot the chosen policy point in red
                 ax.scatter(
@@ -114,7 +136,7 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
                     edgecolors='red',
                     s=60,                      # slightly bigger for emphasis
                     marker='o',
-                    label=f'Chosen Policy' if i == 0 else None  # Avoid duplicate legend labels
+                    label=f'Chosen Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
                 )
             # Connect red dots with a line
         ax.plot(
@@ -126,16 +148,20 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
             label='Chosen Policy Path'
             )
 
+        ax.set_yticks(time_steps)
+        ax.set_yticklabels(hours_list)
         # Labels
-        ax.set_xlabel('Grid Values')
+        ax.set_xlabel('Grid Uncertainty and Deviations')
         ax.set_ylabel('Time')
-        ax.set_zlabel('Price Values')
+        ax.set_zlabel('Self Sufficiency')
 
         # Title and legend
-        ax.set_title('3D Plot of Grid and Price Values Over Time')
+        ax.set_title('Pareto fronts of Self Sufficiency vs. Grid Uncertainty and Deviations over time')
         ax.legend()
         ax.view_init(elev=20, azim=120)
         # Show plot
+        file_path = get_file_path('pareto_front_3d.png')
+        plt.savefig(file_path, dpi=200)
         plt.show()
 
     
@@ -154,8 +180,7 @@ def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots
         grid_value, price_value = get_objective_values_1m(models[1], self_suff)
         grid_values.append(grid_value)
         price_values.append(price_value)
-        print(grid_values)
-        print(price_values)
+        
     plot_pareto_front(grid_values, price_values, self_suff)
 
 def calculate_pareto_front_by_scalarisation_rolling_horizon(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation, params_path):
@@ -172,8 +197,7 @@ def calculate_pareto_front_by_scalarisation_rolling_horizon(model, forecasts, pa
         grid_value, price_value = get_objective_values_1m(models[1], self_suff)
         grid_values.append(grid_value)
         price_values.append(price_value)
-        print(grid_values)
-        print(price_values)
+        
     plot_pareto_front(grid_values, price_values, self_suff)
 
     
@@ -188,6 +212,10 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
     chosen_policy_price = []
     old_time = 0
     counter = 0
+    hours_list = []
+    epsilon_boundaries_low = []
+    epsilon_boundaries_high = []
+
     for point_in_time in time_slots:
         new_time = point_in_time
         start_time = new_time - old_time
@@ -205,6 +233,8 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         if hour >= 24:
             hour = hour-24
         fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-03-06_hour_' + str(hour) + '/' 
+        hour_in_format = f"{hour:02d}:00"
+        hours_list.append(hour_in_format)
 
         # get timeframe for new optimization problem
         new_start_time = get_24_hour_timeframe(timeframe[0], time_delta = time_slots[counter])[1] # this should be '2017-07-13 08:00:00' for time_delta = 2
@@ -239,13 +269,18 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
             model_eps_bound_2 = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, 1,0, self_suff)
             model_eps_bound_1.solve()
             model_eps_bound_2.solve()
-            grid_value_1, price_value_1 = get_objective_values_1m(model_eps_bound_1, self_suff)
-            grid_value_2, price_value_2 = get_objective_values_1m(model_eps_bound_2, self_suff)
+            grid_value_1, price_value_1 = get_objective_values_1m(model_eps_bound_1, self_suff) # here the price value is really low
+            grid_value_2, price_value_2 = get_objective_values_1m(model_eps_bound_2, self_suff) #  here the grid value is really low
+            ideal_point = [grid_value_2, price_value_1]
             epsilons = np.linspace(price_value_1, price_value_2, number_scalarisations)
+            epsilon_boundaries_low.append(price_value_1)
+            epsilon_boundaries_high.append(price_value_2)
             
         grid_values = []
         price_values = []
         weighted_models = []
+        euclid_dist_to_ideal_point = []
+        weights = [0.7,0.3] # weights for grid value, self sufficiency value
         for i in range(number_scalarisations):
             if scalarisation_approach == 'weighted sum':
                 # TODO INCLUDE COSTS
@@ -259,14 +294,17 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
             grid_value, price_value = get_objective_values_1m(weighted_model, self_suff)
             grid_values.append(grid_value)
             price_values.append(price_value)
+            value = [grid_value, price_value]
+            distance = calculate_eucl_weighted_distance(value, ideal_point, weights)
+            euclid_dist_to_ideal_point.append(distance)
             weighted_models.append(weighted_model)
 
         grid_values_array.append(grid_values)
         price_values_array.append(price_values)
 
-        # TODO somehow choose a specific model of the ones in weighted_models (list of models for specific timestep with different weights)
-        # right now, just take 10th
-        chosen_policy_model = weighted_models[5]
+        policy_index = np.argmin(euclid_dist_to_ideal_point)
+        
+        chosen_policy_model =  weighted_models[policy_index]
         # get point for chosen policy
         grid_value_cp, price_value_cp = get_objective_values_1m(chosen_policy_model, self_suff)
         chosen_policy_grid.append(grid_value_cp)
@@ -277,10 +315,10 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         model_t = chosen_policy_model
         old_time = new_time
         counter = counter+1
-    plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price)
+    print(' epsilon boundaries low', epsilon_boundaries_low)
+    print('##################################')
+    print('epsilon boundaries high', epsilon_boundaries_high)
+    plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list)
     #plt.show()
 
-    
-
-        
-    
+ 

@@ -6,7 +6,8 @@ from intraday_utils import get_ground_truth_pg_pb, get_gt_battery_evolution, com
 import numpy as np
 import os
 
-colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
+#colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
+colors = plt.cm.viridis(np.linspace(0, 1, 24))
 
 def postprocess_results_intra(models, timeframe):
     ''' Postprocess the results of the intraday optimizations. '''
@@ -77,11 +78,11 @@ def plot_battery_evolution_intra(models, timeframe):
 
         if color_counter == 0:
             ax.plot(time_e, e_nominal, color=colors[color_counter], linewidth=2, label='Nominal Battery State')
-            ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed', label='Ground truth battery state')
+            #ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed', label='Ground truth battery state')
             first_time_e = time_e
             first_ordered_time_e = ordered_time_e
         else:
-            ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed')
+            #ax.plot(time_e, e_gt, color = colors[color_counter], linewidth=2, linestyle='dashed')
             ax.plot(time_e, e_nominal, color=colors[color_counter], linewidth=2)
         
         ax.fill_between(time_e, e_min, e_max, color=colors[color_counter], alpha=0.2)
@@ -251,14 +252,14 @@ def plot_probabilistic_power_schedule_intra(models, timeframe, quantiles=[0.05, 
         
         if color_counter == 0:
             ax.step(time, pg_nom, label='DiS', color=colors[color_counter], linewidth=2, where='post')
-            ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color=colors[color_counter], linewidth=1.5, where='post')
-            ax.step(time, gt_pg, label='Ground truth', color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
+            ax.step(time, np.ravel(pg_quantile_low), label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color=colors[color_counter], linewidth=1, where='post')
+            #ax.step(time, gt_pg, label='Ground truth', color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
             first_ordered_time = ordered_time
             first_time = time
         else:
             ax.step(time, pg_nom, color=colors[color_counter], linewidth=2, where='post')
-            ax.step(time, np.ravel(pg_quantile_low), '--', color=colors[color_counter], linewidth=1.5, where='post')
-            ax.step(time, gt_pg, color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
+            ax.step(time, np.ravel(pg_quantile_low), color=colors[color_counter], linewidth=1, where='post')
+            #ax.step(time, gt_pg, color=colors[color_counter], linestyle='dotted', linewidth=2, where='post')
             
         ax.step(time, np.ravel(pg_quantile_high), '--', color=colors[color_counter], linewidth=1.5, where='post')
         color_counter = color_counter + 1
