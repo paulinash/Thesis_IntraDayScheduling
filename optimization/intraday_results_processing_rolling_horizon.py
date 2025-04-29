@@ -10,7 +10,6 @@ import os
 
 #colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
 
-
 def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots):
     ''' Postprocess the results of the intraday optimizations. '''
 
@@ -19,6 +18,8 @@ def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots):
     plot_heat_maps_e_range(models, time_slots)
     plot_heat_maps_grid_nominal(models, time_slots)
     plot_heat_maps_grid_quantiles(models, time_slots)
+    plot_heat_maps_nom_battery_to_maximal(models, time_slots)
+    plot_heat_maps_nom_battery_to_minimal(models, time_slots)
     plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, time_slots)
 
 def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
@@ -253,7 +254,7 @@ def plot_heat_maps_e_nominal(models, time_slots):
         color_counter=color_counter+1
     
     # Plot the heatmap using imshow (you can also try pcolormesh)
-    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower')
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=13.5)
     
     # get correct legend labeling
     timestamps = tuple(sorted(all_timestamps_set))
@@ -262,15 +263,15 @@ def plot_heat_maps_e_nominal(models, time_slots):
 
     # Set y-axis to represent different model runs
     ax.set_yticks(np.arange(len(models)))
-    ax.set_yticklabels([f"Run {i+1}" for i in range(len(models))])
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
     
     # Add color bar for the heatmap
-    fig.colorbar(cax, ax=ax, label='Nominal Battery State [kWh]')
+    fig.colorbar(cax, ax=ax, label='Battery State [kWh]')
     
     # Labels and title
-    plt.xlabel('Hour of the Day (Starting from 6 AM)')
-    plt.ylabel('Model Runs')
-    plt.title('Heatmap of Nominal Battery States for Different Runs')
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Nominal Battery States')
     
     # Adjust layout for better readability
     plt.tight_layout()
@@ -316,7 +317,7 @@ def plot_heat_maps_e_range(models, time_slots):
         color_counter=color_counter+1
     
     # Plot the heatmap using imshow (you can also try pcolormesh)
-    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower')
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=13.5)
     
     # get correct legend labeling
     timestamps = tuple(sorted(all_timestamps_set))
@@ -325,15 +326,15 @@ def plot_heat_maps_e_range(models, time_slots):
 
     # Set y-axis to represent different model runs
     ax.set_yticks(np.arange(len(models)))
-    ax.set_yticklabels([f"Run {i+1}" for i in range(len(models))])
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
     
     # Add color bar for the heatmap
-    fig.colorbar(cax, ax=ax, label='Nominal Battery State [kWh]')
+    fig.colorbar(cax, ax=ax, label='Battery State [kWh]')
     
     # Labels and title
-    plt.xlabel('Hour of the Day (Starting from 6 AM)')
-    plt.ylabel('Model Runs')
-    plt.title('Heatmap of Range of Minimal to Maximal Battery Power for Different Runs')
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range between Minimal and Maximal Battery State')
     
     # Adjust layout for better readability
     plt.tight_layout()
@@ -377,7 +378,7 @@ def plot_heat_maps_grid_nominal(models, time_slots):
         color_counter=color_counter+1
     
     # Plot the heatmap using imshow (you can also try pcolormesh)
-    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower')
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=-4, vmax=0)
     
     # get correct legend labeling
     timestamps = tuple(sorted(all_timestamps_set))
@@ -386,15 +387,15 @@ def plot_heat_maps_grid_nominal(models, time_slots):
 
     # Set y-axis to represent different model runs
     ax.set_yticks(np.arange(len(models)))
-    ax.set_yticklabels([f"Run {i+1}" for i in range(len(models))])
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
     
     # Add color bar for the heatmap
     fig.colorbar(cax, ax=ax, label='Grid Power [kW]')
     
     # Labels and title
-    plt.xlabel('Hour of the Day (Starting from 6 AM)')
-    plt.ylabel('Model Runs')
-    plt.title('Heatmap of Nominal Grid Power for Different Runs')
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Nominal Grid Power')
     
     # Adjust layout for better readability
     plt.tight_layout()
@@ -440,7 +441,7 @@ def plot_heat_maps_grid_quantiles(models, time_slots, quantiles=[0.05,0.95]):
         color_counter=color_counter+1
     
     # Plot the heatmap using imshow (you can also try pcolormesh)
-    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower')
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=7)
     
     # get correct legend labeling
     timestamps = tuple(sorted(all_timestamps_set))
@@ -449,21 +450,143 @@ def plot_heat_maps_grid_quantiles(models, time_slots, quantiles=[0.05,0.95]):
 
     # Set y-axis to represent different model runs
     ax.set_yticks(np.arange(len(models)))
-    ax.set_yticklabels([f"Run {i+1}" for i in range(len(models))])
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
     
     # Add color bar for the heatmap
     fig.colorbar(cax, ax=ax, label='Grid Power [kW]')
     
     # Labels and title
-    plt.xlabel('Hour of the Day (Starting from 6 AM)')
-    plt.ylabel('Model Runs')
-    plt.title('Heatmap of Range of Quantiles in DiS for Different Runs')
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range of Quantiles in DiS')
     
     # Adjust layout for better readability
     plt.tight_layout()
     
     # Save the plot as an image
     file_path = get_file_path('heatmap_grid_quantiles.png')
+    plt.savefig(file_path, dpi=200)
+    
+    # Show the plot
+    #plt.show()
+
+def plot_heat_maps_nom_battery_to_maximal(models, time_slots):
+    
+    # Update plot parameters
+    plt.rcParams.update({'font.size': 15})
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Prepare data for the heatmap
+    color_counter = 0
+    all_timestamps_set = set()
+    rows = len(models)
+    width = 25+time_slots[-1]
+    heatmap = np.full((rows, width), np.nan)
+
+    # Loop through the models
+    for model in models:
+        e_prob_max = list(model.model.e_max.get_values().values())
+        e_range = e_prob_max
+        
+        # get correct timeframe (24 hours but with different starting point)
+        ordered_time_e = model.model.time_e.ordered_data()
+        all_timestamps_set.update(ordered_time_e)
+
+        # Append the e_nominal values for the current model to the heatmap data, with time shifting
+        hours = 25
+        if color_counter==0:
+            heatmap[color_counter,0:hours] = e_range
+        else:
+            heatmap[color_counter, time_slots[color_counter-1]:time_slots[color_counter-1]+hours] = e_range
+        color_counter=color_counter+1
+    
+    # Plot the heatmap using imshow (you can also try pcolormesh)
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=13.5)
+    
+    # get correct legend labeling
+    timestamps = tuple(sorted(all_timestamps_set))
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, timestamps)))
+    plt.xticks(np.arange(0, len(timestamps), 2), rotation=45)
+
+    # Set y-axis to represent different model runs
+    ax.set_yticks(np.arange(len(models)))
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
+    
+    # Add color bar for the heatmap
+    fig.colorbar(cax, ax=ax, label='Battery State [kWh]')
+    
+    # Labels and title
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range between Nominal and Maximal Battery State')
+    
+    # Adjust layout for better readability
+    plt.tight_layout()
+    
+    # Save the plot as an image
+    file_path = get_file_path('heatmap_battery_range_nom_to_max.png')
+    plt.savefig(file_path, dpi=200)
+    
+    # Show the plot
+    #plt.show()
+
+def plot_heat_maps_nom_battery_to_minimal(models, time_slots):
+    
+    # Update plot parameters
+    plt.rcParams.update({'font.size': 15})
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Prepare data for the heatmap
+    color_counter = 0
+    all_timestamps_set = set()
+    rows = len(models)
+    width = 25+time_slots[-1]
+    heatmap = np.full((rows, width), np.nan)
+
+    # Loop through the models
+    for model in models:
+        e_prob_min = list(model.model.e_min.get_values().values())
+        e_range = [-a for a in e_prob_min]
+        
+        # get correct timeframe (24 hours but with different starting point)
+        ordered_time_e = model.model.time_e.ordered_data()
+        all_timestamps_set.update(ordered_time_e)
+
+        # Append the e_nominal values for the current model to the heatmap data, with time shifting
+        hours = 25
+        if color_counter==0:
+            heatmap[color_counter,0:hours] = e_range
+        else:
+            heatmap[color_counter, time_slots[color_counter-1]:time_slots[color_counter-1]+hours] = e_range
+        color_counter=color_counter+1
+    
+    # Plot the heatmap using imshow (you can also try pcolormesh)
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=13.5)
+    
+    # get correct legend labeling
+    timestamps = tuple(sorted(all_timestamps_set))
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, timestamps)))
+    plt.xticks(np.arange(0, len(timestamps), 2), rotation=45)
+
+    # Set y-axis to represent different model runs
+    ax.set_yticks(np.arange(len(models)))
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
+    
+    # Add color bar for the heatmap
+    fig.colorbar(cax, ax=ax, label='Battery State [kWh]')
+    
+    # Labels and title
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range between Nominal and Minimal Battery State')
+    
+    # Adjust layout for better readability
+    plt.tight_layout()
+    
+    # Save the plot as an image
+    file_path = get_file_path('heatmap_battery_range_nom_to_min.png')
     plt.savefig(file_path, dpi=200)
     
     # Show the plot

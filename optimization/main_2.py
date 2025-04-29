@@ -13,8 +13,8 @@ from pareto_front import calculate_pareto_front_by_scalarisation, calculate_pare
 from utils import get_24_hour_timeframe
 import numpy as np
 
-show_base_results = False
-intra_day_approach = True
+show_base_results = True
+intra_day_approach = False
 scalarisation_bool = False
 scalarisation_approach_list = ['weighted sum', 'epsilon constraint'] # weighted sum not really in use anymore, except for basic intra day problem
 scalarisation_approach = scalarisation_approach_list[0]
@@ -22,8 +22,8 @@ multiple_pareto_fronts = False
 dynamic_costs = False
 
 #time_slots = [4,20]
-time_slots = [4,8,12,16,20] # corresponds to 10am, 2pm, 6pm, 10pm, 2am 
-#time_slots = [2,4,6,8,10,12,14,16,18,20,22]
+#time_slots = [4,8,12,16,20] # corresponds to 10am, 2pm, 6pm, 10pm, 2am 
+time_slots = [2,4,6,8,10,12,14,16,18,20,22]
 #time_slots = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
 number_scalarisations=10 # for now at least choose 6 please
 self_suff = True
