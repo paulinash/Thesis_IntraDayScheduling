@@ -283,13 +283,13 @@ class BaseOptimizationModel:
         ##########################################################################################################
 
         ############################################# Reproduce Case 1 ###########################################
-        # def constr_x_low(model, t):
-        #     return model.x_low[t] == 0
-        # self.model.constr_x_low = pyo.Constraint(self.model.time, rule=constr_x_low)
-
-        # def constr_x_high(model, t):
-        #     return model.x_high[t] == 0
-        # self.model.constr_x_high = pyo.Constraint(self.model.time, rule=constr_x_high)
+        #def constr_x_low(model, t):
+        #    return model.x_low[t] == 0
+        #self.model.constr_x_low = pyo.Constraint(self.model.time, rule=constr_x_low)
+##
+        #def constr_x_high(model, t):
+        #    return model.x_high[t] == 0
+        #self.model.constr_x_high = pyo.Constraint(self.model.time, rule=constr_x_high)
         ##########################################################################################################
 
 
@@ -299,9 +299,15 @@ class BaseOptimizationModel:
             return sum(
                 self.c11 * model.pg_nom_plus[t] **2 
                 + self.c21 * model.pg_nom_minus[t] **2 
-                - model.c31_varying[t] * model.prob_low[t] * model.exp_pg_low[t] 
+                - self.c31 * model.prob_low[t] * model.exp_pg_low[t] 
                 + self.c32 * model.prob_high[t] * model.exp_pg_high[t]
                 for t in model.time) 
+            #return sum(
+            #    self.c11 * model.pg_nom_plus[t] **2 
+            #    + self.c21 * model.pg_nom_minus[t] **2 
+            #    - model.c31_varying[t] * model.prob_low[t] * model.exp_pg_low[t] 
+            #    + self.c32 * model.prob_high[t] * model.exp_pg_high[t]
+            #    for t in model.time) 
         self.model.objective = pyo.Objective(rule=objective, sense=pyo.minimize)
 
 

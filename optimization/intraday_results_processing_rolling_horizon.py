@@ -19,7 +19,11 @@ def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots):
     plot_heat_maps_grid_nominal(models, time_slots)
     plot_heat_maps_grid_quantiles(models, time_slots)
     plot_heat_maps_nom_battery_to_maximal(models, time_slots)
+    plot_heat_maps_nom_to_max_grid_quantile(models, time_slots)
+    plot_heat_maps_nom_to_min_grid_quantile(models, time_slots)
     plot_heat_maps_nom_battery_to_minimal(models, time_slots)
+    grid_costs_list, ss_costs_list = plot_costs(models)
+
     plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, time_slots)
 
 def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
@@ -469,6 +473,125 @@ def plot_heat_maps_grid_quantiles(models, time_slots, quantiles=[0.05,0.95]):
     
     # Show the plot
     #plt.show()
+def plot_heat_maps_nom_to_max_grid_quantile(models, time_slots, quantiles=[0.05,0.95]):
+    
+    # Update plot parameters
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Prepare data for the heatmap
+    color_counter = 0
+    all_timestamps_set = set()
+    rows = len(models)
+    width = 25+time_slots[-1]
+    heatmap = np.full((rows, width), np.nan)
+
+    # Loop through the models
+    for model in models:
+        # Get quantiles
+        pg_quantile_low, pg_quantile_high = compute_quantiles(model, quantiles)  
+        grid_nominal = list(model.model.pg_nom.get_values().values())
+ 
+        nom_to_max_range = [a-b for a,b in zip(pg_quantile_high, grid_nominal)]  
+        
+        # get correct timeframe (24 hours but with different starting point)
+        ordered_time_e = model.model.time_e.ordered_data()
+        all_timestamps_set.update(ordered_time_e)
+
+        # Append the e_nominal values for the current model to the heatmap data, with time shifting
+        hours = 24
+        if color_counter==0:
+            heatmap[color_counter,0:hours] = nom_to_max_range
+        else:
+            heatmap[color_counter, time_slots[color_counter-1]:time_slots[color_counter-1]+hours] = nom_to_max_range
+        color_counter=color_counter+1
+    
+    # Plot the heatmap using imshow (you can also try pcolormesh)
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=7)
+    
+    # get correct legend labeling
+    timestamps = tuple(sorted(all_timestamps_set))
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, timestamps)))
+    plt.xticks(np.arange(0, len(timestamps), 2), rotation=45)
+
+    # Set y-axis to represent different model runs
+    ax.set_yticks(np.arange(len(models)))
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
+    
+    # Add color bar for the heatmap
+    fig.colorbar(cax, ax=ax, label='Grid Power [kW]')
+    
+    # Labels and title
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range between Nominal Grid Power to 95% Quantiles in DiS')
+    
+    # Adjust layout for better readability
+    plt.tight_layout()
+    
+    # Save the plot as an image
+    file_path = get_file_path('heatmap_nom_to_max_grid_quantiles.png')
+    plt.savefig(file_path, dpi=200)
+
+def plot_heat_maps_nom_to_min_grid_quantile(models, time_slots, quantiles=[0.05,0.95]):
+    
+    # Update plot parameters
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Prepare data for the heatmap
+    color_counter = 0
+    all_timestamps_set = set()
+    rows = len(models)
+    width = 25+time_slots[-1]
+    heatmap = np.full((rows, width), np.nan)
+
+    # Loop through the models
+    for model in models:
+        # Get quantiles
+        pg_quantile_low, pg_quantile_high = compute_quantiles(model, quantiles)  
+        grid_nominal = list(model.model.pg_nom.get_values().values())
+ 
+        nom_to_max_range = [a-b for a,b in zip(grid_nominal, pg_quantile_low)]  
+        
+        # get correct timeframe (24 hours but with different starting point)
+        ordered_time_e = model.model.time_e.ordered_data()
+        all_timestamps_set.update(ordered_time_e)
+
+        # Append the e_nominal values for the current model to the heatmap data, with time shifting
+        hours = 24
+        if color_counter==0:
+            heatmap[color_counter,0:hours] = nom_to_max_range
+        else:
+            heatmap[color_counter, time_slots[color_counter-1]:time_slots[color_counter-1]+hours] = nom_to_max_range
+        color_counter=color_counter+1
+    
+    # Plot the heatmap using imshow (you can also try pcolormesh)
+    cax = ax.imshow(heatmap, cmap='viridis', aspect='auto', interpolation='nearest', origin='lower', vmin=0, vmax=7)
+    
+    # get correct legend labeling
+    timestamps = tuple(sorted(all_timestamps_set))
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, timestamps)))
+    plt.xticks(np.arange(0, len(timestamps), 2), rotation=45)
+
+    # Set y-axis to represent different model runs
+    ax.set_yticks(np.arange(len(models)))
+    ax.set_yticklabels([f"{i}" for i in range(len(models))])
+    
+    # Add color bar for the heatmap
+    fig.colorbar(cax, ax=ax, label='Grid Power [kW]')
+    
+    # Labels and title
+    plt.xlabel('Hour of the Day')
+    plt.ylabel('Schedules')
+    plt.title('Heatmap of Range between Nominal Grid Power to 5% Quantiles in DiS')
+    
+    # Adjust layout for better readability
+    plt.tight_layout()
+    
+    # Save the plot as an image
+    file_path = get_file_path('heatmap_nom_to_min_grid_quantiles.png')
+    plt.savefig(file_path, dpi=200)
 
 def plot_heat_maps_nom_battery_to_maximal(models, time_slots):
     
@@ -591,3 +714,124 @@ def plot_heat_maps_nom_battery_to_minimal(models, time_slots):
     
     # Show the plot
     #plt.show()
+
+
+def plot_costs(models):
+    grid_costs_uncertainty = []
+    self_suff_costs = []
+    grid_costs_deviation = []
+    counter = 0
+    for model in models:
+        # obtains a model and returns the sum of values related to grid uncertainty in obj function and related to self sufficiency
+        print('############')
+        print(counter)
+        if counter != 0:
+            # last day_ahead_schedule only exists for intra day models, not for day ahead model
+            pg_nom = np.array(list(model.model.pg_nom.get_values().values()))
+            DiS_Schedule = np.array(list(model.day_ahead_schedule.values()))
+            # Dis schedule is now shorter than pg_nom, so only calculate the difference for values in dis Schedule
+            min_length = min(len(pg_nom), len(DiS_Schedule))
+            pg_nom_truncated = pg_nom[:min_length]
+            DiS_Schedule_truncated = DiS_Schedule[:min_length]
+            schedule_list = model.c31*(pg_nom_truncated - DiS_Schedule_truncated)**2
+            grid_costs_deviation.append(schedule_list[0])
+            print(schedule_list[0])
+        
+        # List that contains all values of objective function that consider grid uncertainty
+        prob_low = np.array(list(model.model.prob_low.get_values().values()))
+        prob_high = np.array(list(model.model.prob_high.get_values().values()))
+        exp_pg_low = np.array(list(model.model.exp_pg_low.get_values().values()))
+        exp_pg_high = np.array(list(model.model.exp_pg_high.get_values().values()))
+        prob_list = -model.c31*prob_low*exp_pg_low + model.c32*prob_high*exp_pg_high
+        grid_costs_uncertainty.append(prob_list[0])
+
+        # List that containts all values of objective function that consider self sufficiency
+        pg_nom_plus = np.array(list(model.model.pg_nom_plus.get_values().values()))
+        pg_nom_minus = np.array(list(model.model.pg_nom_minus.get_values().values()))
+
+        self_suff=True
+        if self_suff:
+            price_list = model.c11*pg_nom_plus**2 + model.c21*pg_nom_minus**2
+        else: # Promoting cost efficiency
+            price_list = model.c11*pg_nom_plus**2 - model.c21*pg_nom_minus**2
+        self_suff_costs.append(price_list[0])
+
+        counter=counter+1
+        print(prob_list[0])
+        print(price_list[0])
+    
+    # Plot costs
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(self_suff_costs, label='Self-sufficiency costs')
+    ax.plot(grid_costs_uncertainty, label='Grid costs uncertainty')
+    ax.plot(grid_costs_deviation, label='Grid costs deviation')
+    plt.legend(loc='lower right')
+
+    grid_costs_deviation_total = sum(grid_costs_deviation)
+    grid_costs_uncertainty_total = sum(grid_costs_uncertainty)
+    self_suff_costs_total = sum(self_suff_costs)
+    print('grid deviation costs: ', grid_costs_deviation_total)
+    print('grid uncertainty costs: ', grid_costs_uncertainty_total)
+    print('ss costs: ', self_suff_costs_total)
+    grid_costs = [a+b for a,b in zip(grid_costs_deviation, grid_costs_uncertainty)]
+    return grid_costs, self_suff_costs
+
+
+def get_costs_intra(models):
+    grid_costs_uncertainty = []
+    self_suff_costs = []
+    grid_costs_deviation = []
+    counter = 0
+    for model in models:
+        # obtains a model and returns the sum of values related to grid uncertainty in obj function and related to self sufficiency
+        if counter ==0:
+            grid_costs_deviation.append(0)
+        else:
+            # last day_ahead_schedule only exists for intra day models, not for day ahead model
+            pg_nom = np.array(list(model.model.pg_nom.get_values().values()))
+            DiS_Schedule = np.array(list(model.day_ahead_schedule.values()))
+            # Dis schedule is now shorter than pg_nom, so only calculate the difference for values in dis Schedule
+            min_length = min(len(pg_nom), len(DiS_Schedule))
+            pg_nom_truncated = pg_nom[:min_length]
+            DiS_Schedule_truncated = DiS_Schedule[:min_length]
+            schedule_list = model.c31*(pg_nom_truncated - DiS_Schedule_truncated)**2
+            schedule_cost = sum(schedule_list)
+            grid_costs_deviation.append(schedule_cost)
+            
+        
+        # List that contains all values of objective function that consider grid uncertainty
+        prob_low = np.array(list(model.model.prob_low.get_values().values()))
+        prob_high = np.array(list(model.model.prob_high.get_values().values()))
+        exp_pg_low = np.array(list(model.model.exp_pg_low.get_values().values()))
+        exp_pg_high = np.array(list(model.model.exp_pg_high.get_values().values()))
+        prob_list = -model.c31*prob_low*exp_pg_low + model.c32*prob_high*exp_pg_high
+        prob_costs = sum(prob_list)
+        grid_costs_uncertainty.append(prob_costs)
+
+        # List that containts all values of objective function that consider self sufficiency
+        pg_nom_plus = np.array(list(model.model.pg_nom_plus.get_values().values()))
+        pg_nom_minus = np.array(list(model.model.pg_nom_minus.get_values().values()))
+
+        self_suff=True
+        if self_suff:
+            price_list = model.c11*pg_nom_plus**2 + model.c21*pg_nom_minus**2
+        else: # Promoting cost efficiency
+            price_list = model.c11*pg_nom_plus**2 - model.c21*pg_nom_minus**2
+
+        price_costs = sum(price_list)
+        self_suff_costs.append(price_costs)
+
+        counter=counter+1
+        
+    
+    # Plot costs
+    #plt.rcParams.update({'font.size': 15})
+    #fig, ax = plt.subplots(figsize=(10, 6))
+    #ax.plot(self_suff_costs, label='self suff costs')
+    #ax.plot(grid_costs_uncertainty, label='grid costs uncertainty')
+    #ax.plot(grid_costs_deviation, label='grid costs deviation')
+    #plt.legend(loc='lower right')
+
+    grid_costs = [a+b for a,b in zip(grid_costs_deviation, grid_costs_uncertainty)]
+    return grid_costs, self_suff_costs

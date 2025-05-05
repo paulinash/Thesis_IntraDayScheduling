@@ -247,3 +247,34 @@ def validate_expected_values(model):
     for i in range(len(pb_tilde)):
         print(f'Sum of expected values at time {list(model.model.time)[i]}: {pb_tilde[i] + pg_expected[i]}')
 
+def show_costs(model):
+    # TODO we need ground truth here
+    pg_nom_plus = [model.model.pg_nom_plus[t].value for t in model.model.time]
+    pg_nom_minus = [model.model.pg_nom_minus[t].value for t in model.model.time]
+    self_suff_costs_list = [model.c11*a**2 + model.c21*b**2 for a,b in zip(pg_nom_plus, pg_nom_minus)]
+    ss_costs = sum(self_suff_costs_list)
+
+    prob_low = [model.model.prob_low[t].value for t in model.model.time]
+    prob_high = [model.model.prob_high[t].value for t in model.model.time]
+    exp_pg_low = [model.model.exp_pg_low[t].value for t in model.model.time]
+    exp_pg_high = [model.model.exp_pg_high[t].value for t in model.model.time]
+    grid_costs_1 = [-model.c31*a*b for a,b in zip(prob_low, exp_pg_low)]
+    grid_costs_2 = [model.c32*a*b for a,b in zip(prob_high, exp_pg_high)]
+                #- model.c31_varying[t] * model.prob_low[t] * model.exp_pg_low[t] 
+                #+ self.c32 * model.prob_high[t] * model.exp_pg_high[t]
+                #for t in model.time) 
+    grid_costs_list = [a+b for a,b in zip(grid_costs_1, grid_costs_2)]
+    grid_costs = sum(grid_costs_list)
+    
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(self_suff_costs_list, label='self suff costs')
+    ax.plot(grid_costs_list, label='grid costs uncertainty')
+    plt.legend()
+    print('DAy ahead costs lists')
+    print(self_suff_costs_list)
+    print(grid_costs_list)
+    print('Day Ahead summed costs')
+    print(ss_costs)
+    print(grid_costs)
+    

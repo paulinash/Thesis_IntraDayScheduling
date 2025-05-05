@@ -1,8 +1,8 @@
 {
     "experiment_name": "Uncertainty Distribution Optimization",
-    "pdf/cdf name": "sum-2-logistic-distributions",
+    "pdf/cdf name": "sum-2-gaussian-distributions",
     "t_inc": 1.0,
-    "e0": 5.0,
+    "e0": 7.0,
     "e_min": 0.0,
     "e_max": 13.5,
     "pb_min": -5.0,

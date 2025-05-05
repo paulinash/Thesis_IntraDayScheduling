@@ -4,27 +4,27 @@ import sys
 sys.path.append('../')
 from input_data import load_forecasts, load_params, preprocess_data, load_costs
 from optimization_model import BaseOptimizationModel
-from results_processing import postprocess_results, validate_expected_values
+from results_processing import postprocess_results, validate_expected_values, show_costs
 from experiment_tracking import start_experiment, log_data, end_experiment, log_results
-from intraday_solve import solve_intra_day_problems, solve_intra_day_problems_rolling_horizon
+from intraday_solve import solve_intra_day_problems, solve_intra_day_problems_rolling_horizon, solve_intra_day_problems_rolling_horizon_optimal_eps_policy
 from intraday_results_processing import postprocess_results_intra
-from intraday_results_processing_rolling_horizon import postprocess_results_intra_rolling_horizon
+from intraday_results_processing_rolling_horizon import postprocess_results_intra_rolling_horizon, get_costs_intra
 from pareto_front import calculate_pareto_front_by_scalarisation, calculate_pareto_front_by_scalarisation_rolling_horizon, calculate_multiple_pareto_fronts
 from utils import get_24_hour_timeframe
 import numpy as np
 
-show_base_results = True
-intra_day_approach = False
+show_base_results = False
+intra_day_approach = False # # ATTENTION: use weighted sum here
 scalarisation_bool = False
 scalarisation_approach_list = ['weighted sum', 'epsilon constraint'] # weighted sum not really in use anymore, except for basic intra day problem
-scalarisation_approach = scalarisation_approach_list[0]
-multiple_pareto_fronts = False
+scalarisation_approach = scalarisation_approach_list[1]
+multiple_pareto_fronts = True # ATTENTION: use epsilon constraint here
 dynamic_costs = False
 
-#time_slots = [4,20]
+#time_slots = [4,12,20]
 #time_slots = [4,8,12,16,20] # corresponds to 10am, 2pm, 6pm, 10pm, 2am 
-time_slots = [2,4,6,8,10,12,14,16,18,20,22]
-#time_slots = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+#time_slots = [2,4,6,8,10,12,14,16,18,20,22]
+time_slots = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
 number_scalarisations=10 # for now at least choose 6 please
 self_suff = True
 
@@ -60,6 +60,7 @@ def main_2():
     ######## Process and visualize the results
     if show_base_results:
         validate_expected_values(model)
+        show_costs(model)
         postprocess_results(model, day_ahead_timeframe)
 
     #### Intra Day Approach
@@ -79,8 +80,18 @@ def main_2():
     #### Pareto fronts for MULTIPLE time_slots with rolling horizon
     # TODO include costs here
     if multiple_pareto_fronts:
-        calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path)
-
+        # get costs of intra day models
+        weights = [0.3,0.7] # grid and ss weights
+        intra_day_models = solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slots, timeframe, scalarisation='weighted sum', params_path=params_path, weight_1=weights[0], weight_2=weights[1])
+        # grid costs and ss costs array. one entry in a cost array are the summed costs for that model througout the prediction horizon
+        grid_costs_list_intra, ss_costs_list_intra = get_costs_intra(intra_day_models) # ATTENTION costs only sensible for hourly resolution
+        
+        chosen_epsilons = calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path, grid_costs_list_intra,ss_costs_list_intra)
+        # get schedules for optimal epsilon policy
+        
+        #models = solve_intra_day_problems_rolling_horizon_optimal_eps_policy(model, forecasts, params, time_slots, timeframe, params_path, chosen_epsilons)
+        #postprocess_results_intra_rolling_horizon(models, timeframe, time_slots)
+        
     
 if __name__ == '__main__':
     main_2()

@@ -60,7 +60,7 @@ def plot_pareto_front(x,y, self_suff, color='#00876C'):
     plt.scatter(x,y, c=color)
     plt.xlabel('Uncertainty in Grid')
     if self_suff:
-        plt.ylabel('Self sufficiency costs')
+        plt.ylabel('Self-sufficiency costs')
     else:
         plt.ylabel('Cost efficiency costs')
     plt.title('Pareto front of grid vs. price')
@@ -69,8 +69,7 @@ def plot_pareto_front(x,y, self_suff, color='#00876C'):
     #plt.show()
 
 
-def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list):
-        # TODO change this to actual time steps
+def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra):
         hours_list = np.array(hours_list)
         time_steps = np.arange(len(hours_list))
         grid_values_array = np.array(grid_values_array)
@@ -110,7 +109,7 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
                     edgecolors='red',
                     s=60,                      # slightly bigger for emphasis
                     marker='o',
-                    label=f'Chosen Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
+                    label=f'Chosen MOO Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
                 )
         elif dots:
             # Use a colormap to assign different colors to each time step
@@ -119,6 +118,7 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
             for i, t in enumerate(time_steps):
                 grid_vals = grid_values_array[i]
                 price_vals = price_values_array[i]
+                ax.plot(grid_vals, [t]*len(grid_vals), price_vals, color = colors[i], linewidth=1)
                 ax.scatter(
                     grid_vals,              # X = grid
                     [t]*len(grid_vals),     # Y = time
@@ -136,8 +136,19 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
                     edgecolors='red',
                     s=60,                      # slightly bigger for emphasis
                     marker='o',
-                    label=f'Chosen Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
+                    label=f'Chosen MOO Policy' if i == (len(time_steps)-1) else None  # Avoid duplicate legend labels
                 )
+                ax.scatter(
+                    grid_costs_list_intra[i+1],
+                    t,
+                    ss_costs_list_intra[i+1],
+                    facecolors='none',
+                    edgecolors='blue',
+                    s=60,
+                    marker='o',
+                    label=f'Basic Intra Day Policy' if i == (len(time_steps)-1) else None
+                )   
+                
             # Connect red dots with a line
         ax.plot(
             chosen_policy_grid,
@@ -145,26 +156,109 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
             chosen_policy_price,
             color='red',
             linewidth=2.5,
-            label='Chosen Policy Path'
             )
+        ax.plot( # ATTENTION 3.5.25, [:-1] angepasst weil anscheinend sind die 24 lang und time_steps nur 23
+            grid_costs_list_intra[1:],
+            time_steps,
+            ss_costs_list_intra[1:],
+            color='blue',
+            linewidth=2.5,
+            )
+        
 
-        ax.set_yticks(time_steps)
-        ax.set_yticklabels(hours_list)
+        #ax.set_yticks(time_steps)
+        #ax.set_yticklabels(hours_list)
+        # NEW to improve readability
+        ax.set_yticks(time_steps[::4])
+        ax.set_yticklabels(hours_list[::4])
+
+        #for label in ax.get_yticklabels():
+            #label.set_rotation(45)
+            #label.set_ha('right')
         # Labels
         ax.set_xlabel('Grid Uncertainty and Deviations')
         ax.set_ylabel('Time')
-        ax.set_zlabel('Self Sufficiency')
+        ax.set_zlabel('Self-sufficiency')
 
         # Title and legend
-        ax.set_title('Pareto fronts of Self Sufficiency vs. Grid Uncertainty and Deviations over time')
+        ax.set_title('Pareto fronts of Self-sufficiency vs. Grid Uncertainty and Deviations over time')
         ax.legend()
-        ax.view_init(elev=20, azim=120)
+        ax.view_init(elev=20, azim=300)#240 alright
         # Show plot
         file_path = get_file_path('pareto_front_3d.png')
         plt.savefig(file_path, dpi=200)
-        plt.show()
+        #plt.show()
 
     
+def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra):
+    hours_list = np.array(hours_list)
+    time_steps = np.arange(len(hours_list))
+    grid_costs_list_intra = np.array(grid_costs_list_intra)
+    ss_costs_list_intra = np.array(ss_costs_list_intra)
+    chosen_policy_grid = np.array(chosen_policy_grid)
+    chosen_policy_price = np.array(chosen_policy_price)
+        
+    # Time vs. Grid Plot
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(hours_list, grid_costs_list_intra[1:], label='Basic Intra Day Policy')
+    ax.scatter(hours_list, chosen_policy_grid, label='Chosen MOO Policy', color='red')
+
+    ax.set_xticks(time_steps[::2])
+    ax.set_xticklabels(hours_list[::2])
+
+    for label in ax.get_xticklabels():
+        label.set_rotation(45)
+        #label.set_ha('right')
+    
+    ax.set_ylabel('Grid Uncertainty and Deviations')
+    ax.set_xlabel('Time')
+
+    # Title and legend
+    ax.set_title('Grid Uncertainty and Deviations costs for different schedules through time')
+    ax.legend()
+    # Show plot
+    file_path = get_file_path('pareto_front_2d_slice_time_vs_grid.png')
+    plt.savefig(file_path, dpi=200)
+
+    # Time vs. SS Plot
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(hours_list, ss_costs_list_intra[1:], label='Basic Intra Day Policy')
+    ax.scatter(hours_list, chosen_policy_price, label='Chosen MOO Policy', color='red')
+
+    ax.set_xticks(time_steps[::2])
+    ax.set_xticklabels(hours_list[::2])
+    for label in ax.get_xticklabels():
+        label.set_rotation(45)
+        #label.set_ha('right')
+
+    ax.set_ylabel('Self-sufficiency')
+    ax.set_xlabel('Time')
+    # Title and legend
+    ax.set_title('Self-sufficiency costs for different schedules through time')
+
+    ax.legend()
+    # Show plot
+    file_path = get_file_path('pareto_front_2d_slice_time_vs_ss.png')
+    plt.savefig(file_path, dpi=200)
+
+    # Grid vs. SS Plot
+    plt.rcParams.update({'font.size': 15})
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(grid_costs_list_intra[1:], ss_costs_list_intra[1:], label='Basic Intra Day Policy')
+    ax.scatter(chosen_policy_grid, chosen_policy_price, label='Chosen MOO Policy', color='red')
+
+
+    ax.set_xlabel('Grid Deviation and Uncertainty')
+    ax.set_ylabel('Self-sufficiency')
+    # Title and legend
+    ax.set_title('Costs divided into Grid Uncertainty and Deviations part and self-sufficiency part')
+    ax.legend()
+    # Show plot
+    file_path = get_file_path('pareto_front_2d_slice_grid_vs_ss.png')
+    plt.savefig(file_path, dpi=200)
+
 def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation):
     weights_1 = np.linspace(0,1,number_scalarisations)
     weights_2 = [1-w for w in weights_1]
@@ -201,7 +295,7 @@ def calculate_pareto_front_by_scalarisation_rolling_horizon(model, forecasts, pa
     plot_pareto_front(grid_values, price_values, self_suff)
 
     
-def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path):
+def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path, grid_costs_list_intra,ss_costs_list_intra):
     models = [model]
     model_t = model
 
@@ -215,6 +309,7 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
     hours_list = []
     epsilon_boundaries_low = []
     epsilon_boundaries_high = []
+    chosen_epsilons_list = []
 
     for point_in_time in time_slots:
         new_time = point_in_time
@@ -261,7 +356,7 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         #### Now iterate through different weights to obtain a pareto front ###
         weights_1 = np.linspace(0,1,number_scalarisations)
         weights_2 = [1-w for w in weights_1]
-        epsilons = np.linspace(40,100,number_scalarisations)
+        epsilons = np.linspace(40,100,number_scalarisations)# just so there is some initialization, doesnt actually get chosen in this manual way
 
         # Find manual epsilon range dependent on weighted sum edge cases
         if scalarisation_approach == 'epsilon constraint':
@@ -280,7 +375,7 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         price_values = []
         weighted_models = []
         euclid_dist_to_ideal_point = []
-        weights = [0.7,0.3] # weights for grid value, self sufficiency value
+        weights = [0.3,0.7] # weights for grid value, self sufficiency value
         for i in range(number_scalarisations):
             if scalarisation_approach == 'weighted sum':
                 # TODO INCLUDE COSTS
@@ -303,7 +398,8 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         price_values_array.append(price_values)
 
         policy_index = np.argmin(euclid_dist_to_ideal_point)
-        
+        # list of chosen epsilons for every model
+        chosen_epsilons_list.append(epsilons[policy_index])
         chosen_policy_model =  weighted_models[policy_index]
         # get point for chosen policy
         grid_value_cp, price_value_cp = get_objective_values_1m(chosen_policy_model, self_suff)
@@ -315,10 +411,11 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         model_t = chosen_policy_model
         old_time = new_time
         counter = counter+1
-    print(' epsilon boundaries low', epsilon_boundaries_low)
-    print('##################################')
-    print('epsilon boundaries high', epsilon_boundaries_high)
-    plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list)
-    #plt.show()
+    #print(' epsilon boundaries low', epsilon_boundaries_low)
+    #print('epsilon boundaries high', epsilon_boundaries_high)
+    plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra)
+    plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra)
+    plt.show()
+    return chosen_epsilons_list
 
  
