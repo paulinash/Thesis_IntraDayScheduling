@@ -21,7 +21,7 @@ scalarisation_approach = scalarisation_approach_list[1]
 multiple_pareto_fronts = True # ATTENTION: use epsilon constraint here
 dynamic_costs = False
 
-#time_slots = [4,12,20]
+#time_slots = [4,20]
 #time_slots = [4,8,12,16,20] # corresponds to 10am, 2pm, 6pm, 10pm, 2am 
 #time_slots = [2,4,6,8,10,12,14,16,18,20,22]
 time_slots = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
@@ -39,7 +39,7 @@ def main_2():
     timeframe2 = ['2017-07-02 06:00:00', '2017-07-04 05:00:00'] # GT closer to zero than forecasts
     timeframe3 = ['2017-06-09 06:00:00', '2017-06-11 05:00:00'] # GT in mean close to forecast, works for every hour
     timeframe = timeframe1
-    
+
     day_ahead_timeframe = get_24_hour_timeframe(timeframe[0])
 
     # Load data
@@ -60,7 +60,7 @@ def main_2():
     ######## Process and visualize the results
     if show_base_results:
         validate_expected_values(model)
-        show_costs(model)
+        show_costs(model, day_ahead_timeframe)
         postprocess_results(model, day_ahead_timeframe)
 
     #### Intra Day Approach
@@ -69,8 +69,9 @@ def main_2():
     # TODO epsilon needs to be adjusted here
     # TODO include costs here
     if intra_day_approach:
-        models = solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slots, timeframe, scalarisation_approach, params_path)
-        postprocess_results_intra_rolling_horizon(models, timeframe, time_slots)
+        weights = [0.5,0.5] # grid, ss
+        models = solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slots, timeframe, scalarisation_approach, params_path, weight_1=weights[0], weight_2=weights[1])
+        postprocess_results_intra_rolling_horizon(models, timeframe, time_slots, day_ahead_timeframe)
 
     ###### Scalarisation Approaches (only usable for one time step)
     # Not in use anymore
@@ -89,8 +90,8 @@ def main_2():
         chosen_epsilons = calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation_approach, params_path, grid_costs_list_intra,ss_costs_list_intra)
         # get schedules for optimal epsilon policy
         
-        #models = solve_intra_day_problems_rolling_horizon_optimal_eps_policy(model, forecasts, params, time_slots, timeframe, params_path, chosen_epsilons)
-        #postprocess_results_intra_rolling_horizon(models, timeframe, time_slots)
+        models = solve_intra_day_problems_rolling_horizon_optimal_eps_policy(model, forecasts, params, time_slots, timeframe, params_path, chosen_epsilons)
+        postprocess_results_intra_rolling_horizon(models, timeframe, time_slots, day_ahead_timeframe)
         
     
 if __name__ == '__main__':

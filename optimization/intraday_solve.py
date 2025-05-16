@@ -28,7 +28,7 @@ def solve_intra_day_problems_rolling_horizon(model, forecasts, params, time_slot
         hour = point_in_time + 6
         if hour >= 24:
             hour = hour-24
-        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-03-06_hour_' + str(hour) + '/' 
+        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-04-03_hour_' + str(hour) + '/' 
 
         # get timeframe for new optimization problem
         new_start_time = get_24_hour_timeframe(timeframe[0], time_delta = time_slots[counter])[1] # this should be '2017-07-13 08:00:00' for time_delta = 2
@@ -136,7 +136,7 @@ def solve_intra_day_problems_rolling_horizon_optimal_eps_policy(model, forecasts
         hour = point_in_time + 6
         if hour >= 24:
             hour = hour-24
-        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-03-06_hour_' + str(hour) + '/' 
+        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-04-03_hour_' + str(hour) + '/' 
 
         # get timeframe for new optimization problem
         new_start_time = get_24_hour_timeframe(timeframe[0], time_delta = time_slots[counter])[1] # this should be '2017-07-13 08:00:00' for time_delta = 2

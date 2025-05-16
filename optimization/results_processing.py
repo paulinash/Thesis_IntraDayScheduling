@@ -2,22 +2,25 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.optimize import fsolve
-from intraday_utils import get_gt
+from intraday_utils import get_gt, get_ground_truth_pg_pb, get_gt_battery_evolution
 import numpy as np
+from datetime import datetime, timedelta
 import os
 
 colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
+colors = plt.cm.viridis(np.linspace(0, 1, 24))
+
 
 def postprocess_results(model, time_frame):
     ''' Postprocess the results of the optimization. '''
 
-    plot_battery_evolution(model)
+    plot_battery_evolution(model, time_frame)
 
     #plot_power_exchange(model, time_frame)
 
-    plot_probabilistic_power_schedule(model)
+    plot_probabilistic_power_schedule(model, time_frame)
 
-def plot_battery_evolution(model):
+def plot_battery_evolution(model, time_frame):
     ''' Plots the optimal battery evolution over time. '''
 
     e_exp = list(model.model.e_exp.get_values().values())
@@ -28,6 +31,19 @@ def plot_battery_evolution(model):
     e_max = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_max)]
     e_min = [e_nom + e_prob for e_nom, e_prob in zip(e_nominal, e_prob_min)]
 
+    # to compare it to the actual battery states obtained by the Intra-Day model
+    # day_1
+    Intra_Day_gt_day1 = [7.0, 4.50935454076485, 2.4403113183721343, 1.4151473543507112, 2.518546128831651, 4.019169476394423, 7.064469377276281, 9.982095948285696, 12.108162389219148, 13.142813554516678, 13.419933576690035, 12.05427179326, 10.974145948588864, 9.834933308661622, 8.783865419436754, 7.811232109628836, 6.927951977235979, 5.996906915129961, 5.205411996975072, 4.464532761960442, 3.673623696610867, 2.87982293321815, 2.0157735539262, 1.1679489489324235, 0.4242051264496537, 5.0444343851346884e-08, 1.7044594466812752e-06, 0.03397435296905605, 0.4180286232805428, 1.6891208978433714, 3.259357167069003, 4.872888166292924, 7.051357496123029, 7.846768888303665, 9.035151644248456, 9.288169877554576, 9.288183327700528, 9.314775810713819, 9.338225777050216, 9.151682990361492, 8.850892775828006, 8.636562992238092, 8.495414603123521, 8.344716578757012, 8.245419434641601, 8.156891981973171, 8.104734946458002, 8.045721129584077]
+    Intra_Day_gt_day2 = [7.0, 3.8364435311097407, 1.251588817648649, -1.1769558549978854e-08, 0.025710302091443902, 0.178936967055367, 0.5158970607764553, 1.3992996745005981, 2.7196581669937445, 3.7121894015243364, 4.382984874459428, 4.611100216899688, 4.970082870765765, 4.76019236169267, 4.252564799721043, 3.7869433277522204, 3.3070429302793682, 2.7949499580005472, 2.228479683847687, 1.7826153287844733, 1.4427916749569611, 1.0502570660176223, 0.6956610310359019, 0.41461592727455426, 0.09667852595490012, 3.769745428663929e-08, 1.3482989491055153e-05, 0.022599156636440836, 0.2967404543458639, 1.570176331600504, 3.9394234700411803, 6.516660575297727, 8.820351885946904, 10.464651007782123, 11.563804021027307, 11.98263381206897, 12.123140054231694, 12.123153507561838, 12.136737772909148, 12.1159746121174, 12.020130289583106, 11.793370142613407, 11.602296914403466, 11.49084974043876, 11.39285098714657, 11.295692465555486, 11.225465607706358, 11.14257748040307]
+    Intra_Day_gt_day3 = [7.0, 3.7538886955870847, 1.123365292780621, 3.0120774485720148e-09, 0.08003671631721543, 0.03795390158763033, 0.23188158212806265, 1.3489233403499592, 3.3975654451838957, 4.546998789618672, 6.39091869731251, 6.615148332859407, 7.459115576919953, 8.185408242534214, 7.388682659799128, 6.453981586907194, 5.386544024981871, 4.475290518791197, 3.662405342789187, 2.881410861038184, 2.283377745685987, 1.639122464505237, 0.9713241772521763, 0.36153143244188823, 2.1027671655987623e-08, 5.193386118968336e-08, 1.3497607971159913e-05, 0.010215993930065012, 0.6323822609474038, 1.2712029124892383, 2.219939462127468, 4.373861673697865, 6.725731716350974, 8.807794641828595, 10.558394702902987, 11.428996015022301, 11.51791331391392, 11.517926769118016, 11.526655424848457, 11.510761302012662, 11.213611641910276, 10.898673887167035, 10.674549435786675, 10.518491015202931, 10.364368124921146, 10.159048391749039, 10.020170796214435, 9.779683756403356]
+
+
+    # get ground truth
+    pl_gt = get_gt(time_frame)
+    gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
+    e_gt = get_gt_battery_evolution(model, gt_pb)
+    
+
     time_e = [str(t) for t in model.model.time_e]
     ordered_time_e = model.model.time_e.ordered_data()
 
@@ -35,9 +51,11 @@ def plot_battery_evolution(model):
     fig, ax = plt.subplots(figsize=(10, 6))
 
     ax.plot(time_e, e_nominal, '-', color=colors[0], linewidth=3, label='Nominal Battery State')
+    ax.plot(time_e, e_gt, '-', color='red', linewidth=3, label='Actual Battery State')
+    ax.plot(time_e, Intra_Day_gt_day3[:25], color='gray', linewidth=1.5, label='Actual Battey State by Intra-Day')
     #ax.plot(time_e, e_exp, linewidth=2, color='navy', label='Expected Battery State')
-    ax.plot(time_e, e_min, linewidth=2, color=colors[3], label='Min/Max Battery State')
-    ax.plot(time_e, e_max, linewidth=2, color=colors[3])
+    ax.plot(time_e, e_min, linewidth=1, color=colors[0])
+    ax.plot(time_e, e_max, linewidth=1, color=colors[0])
 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
@@ -72,6 +90,8 @@ def plot_power_exchange(model, time_frame):
     prob_low = list(model.model.prob_low.get_values().values())
     prob_high = list(model.model.prob_high.get_values().values())
 
+    
+        
     time = list(model.model.time)
 
     plt.figure(figsize=(10, 6))
@@ -92,7 +112,7 @@ def plot_power_exchange(model, time_frame):
     plt.savefig(file_path, dpi=200)
     # plt.show()
 
-def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
+def plot_probabilistic_power_schedule(model, time_frame, quantiles=[0.05, 0.95]):
     ''' Plot the probabilistic power schedule. '''
 
     time = [str(t.hour) for t in model.model.time]
@@ -140,6 +160,11 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     pg_exp_low_cond = [model.model.pg_nom[t].value + model.model.exp_pg_low[t].value / model.model.prob_low[t].value for t in model.model.time]
     pg_exp_high_cond = [model.model.pg_nom[t].value + model.model.exp_pg_high[t].value / model.model.prob_high[t].value for t in model.model.time]
 
+    # get ground truth
+    pl_gt = get_gt(time_frame)
+    gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
+    gt_pg = list(gt_pg)
+
     # Ensure that the conditional expected deviations are within the quantiles for visualization purposes.
     # With specifying the quantiles, we limit the range that interests us. Thus, the conditional expected deviations
     # should be within the quantiles. For highly asymmetrical distributions, this could not hold. Thus, for asymmetrical
@@ -157,12 +182,18 @@ def plot_probabilistic_power_schedule(model, quantiles=[0.05, 0.95]):
     pg_exp_high_cond.append(pg_exp_high_cond[-1])
     pg_quantile_low.append(pg_quantile_low[-1])
     pg_quantile_high.append(pg_quantile_high[-1])
+    gt_pg.append(gt_pg[-1])
+
+
+   
 
     # Plot the results
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
     ax.step(time, pg_nom, label='Nominal Grid Power', color=colors[0], linewidth=5, where='post')
+    ax.step(time, gt_pg, label='Actual Grid Power', linewidth=5, where='post')
+
     #ax.step(time, pg_exp_low, label='Expectation of Deviations', color='aqua', linewidth=2, where='post')
     #ax.step(time, pg_exp_high, color='aqua', linewidth=2, where='post')
     ax.step(time, pg_exp_low_cond, label='Expectation of Deviations', color='mediumblue', linewidth=2, where='post')
@@ -247,11 +278,17 @@ def validate_expected_values(model):
     for i in range(len(pb_tilde)):
         print(f'Sum of expected values at time {list(model.model.time)[i]}: {pb_tilde[i] + pg_expected[i]}')
 
-def show_costs(model):
-    # TODO we need ground truth here
-    pg_nom_plus = [model.model.pg_nom_plus[t].value for t in model.model.time]
-    pg_nom_minus = [model.model.pg_nom_minus[t].value for t in model.model.time]
-    self_suff_costs_list = [model.c11*a**2 + model.c21*b**2 for a,b in zip(pg_nom_plus, pg_nom_minus)]
+def show_costs(model, time_frame):
+
+    pl_gt = get_gt(time_frame)
+    gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
+    gt_pg = list(gt_pg)
+    pg_plus = [x if x > 0 else 0 for x in gt_pg]
+    pg_minus = [x if x < 0 else 0 for x in gt_pg]
+    pg_nom = list(model.model.pg_nom.get_values().values())
+    
+
+    self_suff_costs_list = [model.c11*a**2 + model.c21*b**2 for a,b in zip(pg_plus, pg_minus)]
     ss_costs = sum(self_suff_costs_list)
 
     prob_low = [model.model.prob_low[t].value for t in model.model.time]
@@ -266,15 +303,27 @@ def show_costs(model):
     grid_costs_list = [a+b for a,b in zip(grid_costs_1, grid_costs_2)]
     grid_costs = sum(grid_costs_list)
     
+    start = datetime.strptime('06:00', '%H:%M')
+    x_label = [(start + timedelta(hours=i)).strftime('%H:%M') for i in range(24)]
+
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(self_suff_costs_list, label='self suff costs')
-    ax.plot(grid_costs_list, label='grid costs uncertainty')
+    ax.plot(x_label, self_suff_costs_list, label='Self-sufficiency costs')
+    ax.plot(x_label, grid_costs_list, label='Grid uncertainty costs')
+    ax.plot(x_label, pg_nom, label='Grid deviation costs')
+    #plt.title('Self-sufficiency and grid uncertainty costs for Day Ahead Model')
     plt.legend()
-    print('DAy ahead costs lists')
-    print(self_suff_costs_list)
-    print(grid_costs_list)
+    plt.xticks(x_label[::2], rotation=45)
+    
+    
+    
+    file_path = get_file_path('ss vs grid costs.png')
+    plt.savefig(file_path, dpi=200)
     print('Day Ahead summed costs')
     print(ss_costs)
     print(grid_costs)
+    print(pg_nom)
+    print('jddjdjdjddjdj')
+    print(gt_pg)
+
     

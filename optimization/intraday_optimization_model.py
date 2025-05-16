@@ -55,10 +55,10 @@ class IntraDayOptimizationModel(BaseOptimizationModel):
             # Promoting self sufficiency
             if self.self_suff:
                 return (
-                    # Grid uncertainty
+                    # Grid deviation
                     self.weight_1*sum(
                         self.c31*(model.pg_nom[t] - self.day_ahead_schedule[t])**2 for t in set(model.time) & set(self.day_ahead_schedule.keys())
-                    )
+                    )# grid uncertainty
                     + self.weight_1*sum(
                         -self.c31*model.prob_low[t]*model.exp_pg_low[t] + self.c32*model.prob_high[t]*model.exp_pg_high[t] for t in model.time
                     )# Self sufficiency

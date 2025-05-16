@@ -40,9 +40,10 @@ def get_objective_values_1m(model, self_suff=True):
     sum_grid = sum(schedule_list) + sum(prob_list)
     print('Deviation ', sum(schedule_list))
     print('Uncertainty ', sum(prob_list))
+
+
     pg_nom_plus = np.array(list(model.model.pg_nom_plus.get_values().values()))
     pg_nom_minus = np.array(list(model.model.pg_nom_minus.get_values().values()))
-
     # List that containts all values of objective function that consider self sufficiency
     if self_suff:
         price_list = model.c11*pg_nom_plus**2 + model.c21*pg_nom_minus**2
@@ -146,7 +147,7 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
                     edgecolors='blue',
                     s=60,
                     marker='o',
-                    label=f'Basic Intra Day Policy' if i == (len(time_steps)-1) else None
+                    label=f'Basic Intra-Day Policy' if i == (len(time_steps)-1) else None
                 )   
                 
             # Connect red dots with a line
@@ -181,7 +182,7 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
         ax.set_zlabel('Self-sufficiency')
 
         # Title and legend
-        ax.set_title('Pareto fronts of Self-sufficiency vs. Grid Uncertainty and Deviations over time')
+        #ax.set_title('Pareto fronts of Self-sufficiency vs. Grid Uncertainty and Deviations over time')
         ax.legend()
         ax.view_init(elev=20, azim=300)#240 alright
         # Show plot
@@ -190,19 +191,30 @@ def plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_g
         #plt.show()
 
     
-def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra):
+def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra, price_values_low, price_values_high, grid_values_low, grid_values_high):
     hours_list = np.array(hours_list)
     time_steps = np.arange(len(hours_list))
     grid_costs_list_intra = np.array(grid_costs_list_intra)
     ss_costs_list_intra = np.array(ss_costs_list_intra)
     chosen_policy_grid = np.array(chosen_policy_grid)
     chosen_policy_price = np.array(chosen_policy_price)
-        
+    price_values_high = np.array(price_values_high)
+    price_values_low = np.array(price_values_low)
+    grid_values_low = np.array(grid_values_low)
+    grid_values_high = np.array(grid_values_high)
+
+    # get error terms
+    error_grid_low = np.array(chosen_policy_grid-grid_values_low)
+    error_grid_high = np.array(grid_values_high-chosen_policy_grid)
+    error_price_low = np.array(chosen_policy_price-price_values_low)
+    error_price_high = np.array(price_values_high-chosen_policy_price)
+
     # Time vs. Grid Plot
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.scatter(hours_list, grid_costs_list_intra[1:], label='Basic Intra Day Policy')
-    ax.scatter(hours_list, chosen_policy_grid, label='Chosen MOO Policy', color='red')
+    #ax.scatter(hours_list, chosen_policy_grid, label='Chosen MOO Policy', color='red')
+    ax.errorbar(hours_list, chosen_policy_grid, yerr=[error_grid_low, error_grid_high], fmt='o', color='red', ecolor='red', capsize=5, label='Chosen MOO Policy')
+    ax.scatter(hours_list, grid_costs_list_intra[1:], label='Basic Intra-Day Policy')
 
     ax.set_xticks(time_steps[::2])
     ax.set_xticklabels(hours_list[::2])
@@ -215,7 +227,7 @@ def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_cos
     ax.set_xlabel('Time')
 
     # Title and legend
-    ax.set_title('Grid Uncertainty and Deviations costs for different schedules through time')
+    #ax.set_title('Grid Uncertainty and Deviations costs for different schedules through time')
     ax.legend()
     # Show plot
     file_path = get_file_path('pareto_front_2d_slice_time_vs_grid.png')
@@ -224,8 +236,10 @@ def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_cos
     # Time vs. SS Plot
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.scatter(hours_list, ss_costs_list_intra[1:], label='Basic Intra Day Policy')
-    ax.scatter(hours_list, chosen_policy_price, label='Chosen MOO Policy', color='red')
+    #ax.scatter(hours_list, chosen_policy_price, label='Chosen MOO Policy', color='red')
+    ax.errorbar(hours_list, chosen_policy_price, yerr=[error_price_low, error_price_high], fmt='o', color='red', ecolor='red', capsize=5, label='Chosen MOO Policy')
+    ax.scatter(hours_list, ss_costs_list_intra[1:], label='Basic Intra-Day Policy')
+
 
     ax.set_xticks(time_steps[::2])
     ax.set_xticklabels(hours_list[::2])
@@ -236,27 +250,11 @@ def plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_cos
     ax.set_ylabel('Self-sufficiency')
     ax.set_xlabel('Time')
     # Title and legend
-    ax.set_title('Self-sufficiency costs for different schedules through time')
+    #ax.set_title('Self-sufficiency costs for different schedules through time')
 
     ax.legend()
     # Show plot
     file_path = get_file_path('pareto_front_2d_slice_time_vs_ss.png')
-    plt.savefig(file_path, dpi=200)
-
-    # Grid vs. SS Plot
-    plt.rcParams.update({'font.size': 15})
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.scatter(grid_costs_list_intra[1:], ss_costs_list_intra[1:], label='Basic Intra Day Policy')
-    ax.scatter(chosen_policy_grid, chosen_policy_price, label='Chosen MOO Policy', color='red')
-
-
-    ax.set_xlabel('Grid Deviation and Uncertainty')
-    ax.set_ylabel('Self-sufficiency')
-    # Title and legend
-    ax.set_title('Costs divided into Grid Uncertainty and Deviations part and self-sufficiency part')
-    ax.legend()
-    # Show plot
-    file_path = get_file_path('pareto_front_2d_slice_grid_vs_ss.png')
     plt.savefig(file_path, dpi=200)
 
 def calculate_pareto_front_by_scalarisation(model, forecasts, params, time_slots, timeframe, self_suff, number_scalarisations, scalarisation):
@@ -309,6 +307,8 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
     hours_list = []
     epsilon_boundaries_low = []
     epsilon_boundaries_high = []
+    grid_boundaries_low = []
+    grid_boundaries_high = []
     chosen_epsilons_list = []
 
     for point_in_time in time_slots:
@@ -327,7 +327,7 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         hour = point_in_time + 6
         if hour >= 24:
             hour = hour-24
-        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-03-06_hour_' + str(hour) + '/' 
+        fc_folder = 'data/parametric_forecasts/gmm2_forecast_2025-04-03_hour_' + str(hour) + '/' 
         hour_in_format = f"{hour:02d}:00"
         hours_list.append(hour_in_format)
 
@@ -360,22 +360,30 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
 
         # Find manual epsilon range dependent on weighted sum edge cases
         if scalarisation_approach == 'epsilon constraint':
-            model_eps_bound_1 = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, 0,1, self_suff)
-            model_eps_bound_2 = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, 1,0, self_suff)
+            print('correct if clause')
+            model_eps_bound_1 = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, 0,1, self_suff) # complete weight on ss
+            model_eps_bound_2 = IntraDayOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, 1,0, self_suff) # complete weight on grid 
             model_eps_bound_1.solve()
             model_eps_bound_2.solve()
             grid_value_1, price_value_1 = get_objective_values_1m(model_eps_bound_1, self_suff) # here the price value is really low
             grid_value_2, price_value_2 = get_objective_values_1m(model_eps_bound_2, self_suff) #  here the grid value is really low
             ideal_point = [grid_value_2, price_value_1]
             epsilons = np.linspace(price_value_1, price_value_2, number_scalarisations)
-            epsilon_boundaries_low.append(price_value_1)
-            epsilon_boundaries_high.append(price_value_2)
+            print('epsilons ', epsilons)
+            print('grid, price model1, ', grid_value_1, price_value_1)
+            print('grid, price model2, ', grid_value_2, price_value_2)
+
+            epsilon_boundaries_low.append(price_value_1) # low price value
+            grid_boundaries_high.append(grid_value_1) # high grid value
+            epsilon_boundaries_high.append(price_value_2) # high price value
+            grid_boundaries_low.append(grid_value_2) # low grid value
             
         grid_values = []
         price_values = []
         weighted_models = []
         euclid_dist_to_ideal_point = []
         weights = [0.3,0.7] # weights for grid value, self sufficiency value
+
         for i in range(number_scalarisations):
             if scalarisation_approach == 'weighted sum':
                 # TODO INCLUDE COSTS
@@ -383,10 +391,25 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
                 
             elif scalarisation_approach == 'epsilon constraint':
                 # TODO INCLUDE COSTS
+                print(' time point ', point_in_time)
+                print('counter scalarisation ', i)
+                print('epsilon', epsilons[i])
                 weighted_model = EpsilonConstraintOptimizationModel(input_data, day_ahead_schedule, e_nom, e_prob_min, e_prob_max, epsilons[i], self_suff)
             weighted_model.solve()
-            # TODO INCLUDE COSTS
+                
             grid_value, price_value = get_objective_values_1m(weighted_model, self_suff)
+
+            # TODO: hier wird auf einmal auch 3d pareto front ganz anders. was ist da passiet???????????????!!!!!!!!!!!!!!!!!
+
+            # # get extreme values for 2d plot range
+            #if i == 0: # very low, strict price constraint
+            #    epsilon_boundaries_low.append(price_value) # low price value
+            #    grid_boundaries_high.append(grid_value) # high grid value
+            #if i== number_scalarisations-1: # very high, loose price constraint
+            #    epsilon_boundaries_high.append(price_value) # high price value
+            #    grid_boundaries_low.append(grid_value) # low grid value
+            
+
             grid_values.append(grid_value)
             price_values.append(price_value)
             value = [grid_value, price_value]
@@ -402,7 +425,11 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
         chosen_epsilons_list.append(epsilons[policy_index])
         chosen_policy_model =  weighted_models[policy_index]
         # get point for chosen policy
+        print('epsiloon boundaries [low,high] ', epsilon_boundaries_low, epsilon_boundaries_high)
+        print('grid boundaries [low, high] ', grid_boundaries_low, grid_boundaries_high)
+        print('policy ', policy_index)
         grid_value_cp, price_value_cp = get_objective_values_1m(chosen_policy_model, self_suff)
+        print(' chosen policy grid, price ', grid_value_cp, price_value_cp)
         chosen_policy_grid.append(grid_value_cp)
         chosen_policy_price.append(price_value_cp)
         models.append(chosen_policy_model)
@@ -414,8 +441,8 @@ def calculate_multiple_pareto_fronts(model, forecasts, params, time_slots, timef
     #print(' epsilon boundaries low', epsilon_boundaries_low)
     #print('epsilon boundaries high', epsilon_boundaries_high)
     plot_3d_pareto_fronts(grid_values_array, price_values_array, chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra)
-    plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra)
-    plt.show()
+    plot_2d_slices(chosen_policy_grid, chosen_policy_price, hours_list, grid_costs_list_intra, ss_costs_list_intra, epsilon_boundaries_low, epsilon_boundaries_high, grid_boundaries_low, grid_boundaries_high)
+    #plt.show()
     return chosen_epsilons_list
 
  

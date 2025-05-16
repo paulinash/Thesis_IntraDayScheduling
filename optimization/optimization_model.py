@@ -286,7 +286,7 @@ class BaseOptimizationModel:
         #def constr_x_low(model, t):
         #    return model.x_low[t] == 0
         #self.model.constr_x_low = pyo.Constraint(self.model.time, rule=constr_x_low)
-##
+###
         #def constr_x_high(model, t):
         #    return model.x_high[t] == 0
         #self.model.constr_x_high = pyo.Constraint(self.model.time, rule=constr_x_high)

@@ -6,11 +6,12 @@ from intraday_utils import get_ground_truth_pg_pb, get_gt_battery_evolution, com
 from utils import get_24_hour_timeframe
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 import os
 
 #colors = ['#43AA8B', '#ffb000', '#fe6100', '#dc267f', '#785ef0', '#648fff']
 
-def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots):
+def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots, day_ahead_timeframe):
     ''' Postprocess the results of the intraday optimizations. '''
 
     plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots)
@@ -22,7 +23,7 @@ def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots):
     plot_heat_maps_nom_to_max_grid_quantile(models, time_slots)
     plot_heat_maps_nom_to_min_grid_quantile(models, time_slots)
     plot_heat_maps_nom_battery_to_minimal(models, time_slots)
-    grid_costs_list, ss_costs_list = plot_costs(models)
+    grid_costs_list, ss_costs_list = plot_costs(models, day_ahead_timeframe)
 
     plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, time_slots)
 
@@ -57,7 +58,6 @@ def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
         pl_gt = get_gt(intra_day_timeframe)
         gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
         e_gt = get_gt_battery_evolution(model, gt_pb)
-
         whole_e_gt = np.concatenate((whole_e_gt[:point_in_time], e_gt))
     
 
@@ -89,7 +89,9 @@ def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
     hours = pd.date_range(start=timeframe[0], end=timeframe[1], freq='h')
     whole_time = hours.strftime('%Y-%m-%d %H:%M:%S').tolist()
     needed_length = len(whole_e_gt)
-    ax.plot(whole_time[:needed_length], whole_e_gt, color='black', linewidth='1', label='Whole Ground Truth')
+    print('whole gt ', list(whole_e_gt))
+    
+    ax.plot(whole_time[:needed_length], whole_e_gt, color='red', linewidth='1.5', label='Actual Battery State')
     
     # get correct legend labeling
     timestamps = tuple(sorted(all_timestamps_set))
@@ -107,6 +109,8 @@ def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
     file_path = get_file_path('battery_evolution_intra.png')
     plt.savefig(file_path, dpi=200)
     #plt.show()
+
+
 
 def plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, time_slots, quantiles=[0.05, 0.95]):
     ''' Plot the probabilistic power schedule. '''
@@ -212,7 +216,7 @@ def plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, t
     whole_time = hours.strftime('%Y-%m-%d %H:%M:%S').tolist()
     needed_length = len(whole_pg_gt)
     
-    ax.step(whole_time[:needed_length], whole_pg_gt, color='black', linewidth='1', label='Whole Ground Truth', where='post')
+    ax.step(whole_time[:needed_length], whole_pg_gt, color='red', linewidth='1.5', label='Actual Dispatch', where='post')
 
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
     plt.tight_layout()
@@ -524,7 +528,7 @@ def plot_heat_maps_nom_to_max_grid_quantile(models, time_slots, quantiles=[0.05,
     # Labels and title
     plt.xlabel('Hour of the Day')
     plt.ylabel('Schedules')
-    plt.title('Heatmap of Range between Nominal Grid Power to 95% Quantiles in DiS')
+    plt.title('Heatmap of Range between DiS to 95% Quantiles in DiS')
     
     # Adjust layout for better readability
     plt.tight_layout()
@@ -584,7 +588,7 @@ def plot_heat_maps_nom_to_min_grid_quantile(models, time_slots, quantiles=[0.05,
     # Labels and title
     plt.xlabel('Hour of the Day')
     plt.ylabel('Schedules')
-    plt.title('Heatmap of Range between Nominal Grid Power to 5% Quantiles in DiS')
+    plt.title('Heatmap of Range between DiS to 5% Quantiles in DiS')
     
     # Adjust layout for better readability
     plt.tight_layout()
@@ -716,26 +720,22 @@ def plot_heat_maps_nom_battery_to_minimal(models, time_slots):
     #plt.show()
 
 
-def plot_costs(models):
+def plot_costs(models, time_frame):
     grid_costs_uncertainty = []
     self_suff_costs = []
     grid_costs_deviation = []
+    whole_gt = []
     counter = 0
+
+    hourly_range = pd.date_range(start=time_frame[0], end=time_frame[1], freq='H')
+    time_stamps = hourly_range.strftime('%Y-%m-%d %H:%M:%S').tolist()
     for model in models:
         # obtains a model and returns the sum of values related to grid uncertainty in obj function and related to self sufficiency
         print('############')
         print(counter)
-        if counter != 0:
-            # last day_ahead_schedule only exists for intra day models, not for day ahead model
-            pg_nom = np.array(list(model.model.pg_nom.get_values().values()))
-            DiS_Schedule = np.array(list(model.day_ahead_schedule.values()))
-            # Dis schedule is now shorter than pg_nom, so only calculate the difference for values in dis Schedule
-            min_length = min(len(pg_nom), len(DiS_Schedule))
-            pg_nom_truncated = pg_nom[:min_length]
-            DiS_Schedule_truncated = DiS_Schedule[:min_length]
-            schedule_list = model.c31*(pg_nom_truncated - DiS_Schedule_truncated)**2
-            grid_costs_deviation.append(schedule_list[0])
-            print(schedule_list[0])
+        
+        pg_nom = np.array(list(model.model.pg_nom.get_values().values()))
+        grid_costs_deviation.append(pg_nom[0])
         
         # List that contains all values of objective function that consider grid uncertainty
         prob_low = np.array(list(model.model.prob_low.get_values().values()))
@@ -746,28 +746,38 @@ def plot_costs(models):
         grid_costs_uncertainty.append(prob_list[0])
 
         # List that containts all values of objective function that consider self sufficiency
-        pg_nom_plus = np.array(list(model.model.pg_nom_plus.get_values().values()))
-        pg_nom_minus = np.array(list(model.model.pg_nom_minus.get_values().values()))
-
-        self_suff=True
-        if self_suff:
-            price_list = model.c11*pg_nom_plus**2 + model.c21*pg_nom_minus**2
-        else: # Promoting cost efficiency
-            price_list = model.c11*pg_nom_plus**2 - model.c21*pg_nom_minus**2
+    
+        new_time_stamp = datetime.strptime(time_stamps[counter], '%Y-%m-%d %H:%M:%S') + timedelta(hours=23)
+        updated_time_frame = [time_stamps[counter], new_time_stamp.strftime('%Y-%m-%d %H:%M:%S') ]
+        
+        pl_gt = get_gt(updated_time_frame)
+        gt_pg, gt_pb = get_ground_truth_pg_pb(model, pl_gt)
+        gt_pg = list(gt_pg)
+        whole_gt.append(gt_pg[0])
+        pg_plus = [x if x > 0 else 0 for x in gt_pg]
+        pg_minus = [x if x < 0 else 0 for x in gt_pg]
+        
+        price_list = [model.c11*a**2 + model.c21*b**2 for a,b in zip(pg_plus, pg_minus)]
         self_suff_costs.append(price_list[0])
 
+
         counter=counter+1
-        print(prob_list[0])
-        print(price_list[0])
-    
+        
+    start = datetime.strptime('06:00', '%H:%M')
+    x_label = [(start + timedelta(hours=i)).strftime('%H:%M') for i in range(24)]    
     # Plot costs
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(self_suff_costs, label='Self-sufficiency costs')
-    ax.plot(grid_costs_uncertainty, label='Grid costs uncertainty')
-    ax.plot(grid_costs_deviation, label='Grid costs deviation')
+    ax.plot(x_label, self_suff_costs, label='Self-sufficiency costs')
+    ax.plot(x_label, grid_costs_uncertainty, label='Grid uncertainty costs')
+    #ax.plot(x_label, grid_costs_deviation, label='Grid deviation costs')
     plt.legend(loc='lower right')
 
+    
+    plt.xticks(x_label[::2], rotation=45)
+    
+    file_path = get_file_path('ss vs grid costs INTRA.png')
+    plt.savefig(file_path, dpi=200)
     grid_costs_deviation_total = sum(grid_costs_deviation)
     grid_costs_uncertainty_total = sum(grid_costs_uncertainty)
     self_suff_costs_total = sum(self_suff_costs)
@@ -775,6 +785,10 @@ def plot_costs(models):
     print('grid uncertainty costs: ', grid_costs_uncertainty_total)
     print('ss costs: ', self_suff_costs_total)
     grid_costs = [a+b for a,b in zip(grid_costs_deviation, grid_costs_uncertainty)]
+    print('grid_costs_deviation_list ', grid_costs_deviation)
+    print('whole ground truth', whole_gt)
+    #print(len(whole_gt))
+    #plt.show()
     return grid_costs, self_suff_costs
 
 
