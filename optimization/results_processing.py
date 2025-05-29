@@ -313,15 +313,8 @@ def show_costs(model, time_frame):
     plt.legend()
     plt.xticks(x_label[::2], rotation=45)
     
-    
-    
     file_path = get_file_path('ss vs grid costs.png')
     plt.savefig(file_path, dpi=200)
-    print('Day Ahead summed costs')
-    print(ss_costs)
-    print(grid_costs)
-    print(pg_nom)
-    print('jddjdjdjddjdj')
-    print(gt_pg)
+    
 
     

@@ -13,8 +13,8 @@ from utils import get_24_hour_timeframe
 import numpy as np
 
 show_base_results = False
-intra_day_approach = True #!plot_costs only works for hourly resolution!
-multiple_pareto_fronts = False # !resulting cost values are only sensible for hourly resolution!
+intra_day_approach = False #!plot_costs only works for hourly resolution!
+multiple_pareto_fronts = True # !resulting cost values are only sensible for hourly resolution!
 
 # choose resolution
 #time_slots = [4,10]
@@ -49,7 +49,7 @@ def main():
     ######## Process and visualize the results
     if show_base_results:
         validate_expected_values(model)
-        show_costs(model, day_ahead_timeframe)
+        #show_costs(model, day_ahead_timeframe)
         postprocess_results(model, day_ahead_timeframe)
 
     #### Intra Day Approach
