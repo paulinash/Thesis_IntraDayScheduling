@@ -234,7 +234,7 @@ class BaseOptimizationModel:
         def constr_prob_low(model, t):
             ''' prob_low[t] = CDF[t](x_low[t])'''
             if self.probability_distribution_name == 'sum-2-gaussian-distributions':
-                return model.prob_low[t] == self.cdf(model.x_low[t], *model.pdf_weights[t],n=10) # TODO added n=10 hier und unten 6.3.25
+                return model.prob_low[t] == self.cdf(model.x_low[t], *model.pdf_weights[t],n=10) 
             else:
                 return model.prob_low[t] == self.cdf(model.x_low[t], *model.pdf_weights[t])
         self.model.constr_prob_low = pyo.Constraint(self.model.time, rule=constr_prob_low)

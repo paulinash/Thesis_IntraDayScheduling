@@ -13,8 +13,8 @@ from utils import get_24_hour_timeframe
 import numpy as np
 
 show_base_results = False
-intra_day_approach = False #!plot_costs only works for hourly resolution!
-multiple_pareto_fronts = True # !resulting cost values are only sensible for hourly resolution!
+intra_day_approach = True #!plot_costs only works for hourly resolution!
+multiple_pareto_fronts = False # !resulting cost values are only sensible for hourly resolution!
 
 # choose resolution
 #time_slots = [4,10]
@@ -22,7 +22,7 @@ multiple_pareto_fronts = True # !resulting cost values are only sensible for hou
 #time_slots = [2,4,6,8,10,12,14,16,18,20,22] # 2 hourly resolution
 time_slots = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23] # hourly resolution
 
-number_scalarisations=10 # TODO back to 10
+number_scalarisations=10 
 self_suff = True
 timeframe1 = ['2017-05-02 06:00:00', '2017-05-04 05:00:00'] # GT much more negative than forecasts
 timeframe2 = ['2017-07-02 06:00:00', '2017-07-04 05:00:00'] # GT closer to zero than forecasts
