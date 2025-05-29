@@ -50,12 +50,12 @@ def plot_battery_evolution(model, time_frame):
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.plot(time_e, e_nominal, '-', color=colors[0], linewidth=3, label='Nominal Battery State')
-    ax.plot(time_e, e_gt, '-', color='red', linewidth=3, label='Actual Battery State')
-    ax.plot(time_e, Intra_Day_gt_day3[:25], color='gray', linewidth=1.5, label='Actual Battey State by Intra-Day')
+    ax.plot(time_e, e_nominal, '-', color=colors[0], linewidth=1.5, label='Nominal Battery State')
+    ax.plot(time_e, e_gt, '-', color='red', linewidth=1.5, label='Actual Battery State')
+    #ax.plot(time_e, Intra_Day_gt_day3[:25], color='gray', linewidth=1.5, label='Actual Battey State by Intra-Day') # to plot associated intra-day policy
     #ax.plot(time_e, e_exp, linewidth=2, color='navy', label='Expected Battery State')
-    ax.plot(time_e, e_min, linewidth=1, color=colors[0])
-    ax.plot(time_e, e_max, linewidth=1, color=colors[0])
+    #ax.plot(time_e, e_min, linewidth=1, color=colors[0])
+    #ax.plot(time_e, e_max, linewidth=1, color=colors[0])
 
     ax.axhline(y=model.e_limit_max, color='k', linestyle='--', linewidth='2', label='Battery Limits')
     ax.axhline(y=model.e_limit_min, color='k', linestyle='--', linewidth='2')
@@ -191,47 +191,45 @@ def plot_probabilistic_power_schedule(model, time_frame, quantiles=[0.05, 0.95])
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.step(time, pg_nom, label='Nominal Grid Power', color=colors[0], linewidth=5, where='post')
-    ax.step(time, gt_pg, label='Actual Grid Power', linewidth=5, where='post')
+    ax.step(time, pg_nom, label='Nominal Grid Power', color=colors[0], linewidth=1.5, where='post')
+    ax.step(time, gt_pg, label='Actual Grid Power', linewidth=1.5, where='post', color='red')
 
-    #ax.step(time, pg_exp_low, label='Expectation of Deviations', color='aqua', linewidth=2, where='post')
-    #ax.step(time, pg_exp_high, color='aqua', linewidth=2, where='post')
-    ax.step(time, pg_exp_low_cond, label='Expectation of Deviations', color='mediumblue', linewidth=2, where='post')
-    ax.step(time, pg_exp_high_cond, color='mediumblue', linewidth=2, where='post')
+    
+    #ax.step(time, pg_exp_low_cond, label='Expectation of Deviations', color='mediumblue', linewidth=2, where='post')
+    #ax.step(time, pg_exp_high_cond, color='mediumblue', linewidth=2, where='post')
 
 
-    ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color='black', linewidth=1.5, where='post')
-    ax.step(time, np.ravel(pg_quantile_high), '--', color='black', linewidth=1.5, where='post')
-
+    #ax.step(time, np.ravel(pg_quantile_low), '--', label=f'{int(100*quant_low)} - {int(100*quant_high)}% Quantile', color=colors[0], linewidth=1.5, where='post')
+    #ax.step(time, np.ravel(pg_quantile_high), '--', color=colors[0], linewidth=1.5, where='post')
+    ax.fill_between(time,np.ravel(pg_quantile_low), np.ravel(pg_quantile_high), color=colors[0], alpha=0.2,step='post')
+    # to plot probabilities in color
     cmap = plt.get_cmap('PuRd') # 'viridis'
     probs_low = list(model.model.prob_low.get_values().values())
     probs_high = list(model.model.prob_high.get_values().values())
+    #norm = mcolors.Normalize(vmin=0.0, vmax=0.6) # Specify the range of the colormap => for symmetric pdfs, 0.5 is the maximum.
+    #for i in range(len(time) - 1):
+    #    color_value_low = cmap(norm(probs_low[i]))
+    #    color_value_high = cmap(norm(probs_high[i]))
+    #    ax.fill_between(time[i:i+2], pg_nom[i:i+2], pg_quantile_low[i:i+2], color=color_value_low, alpha=1.0, step='post')
+    #    ax.fill_between(time[i:i+2], pg_nom[i:i+2], pg_quantile_high[i:i+2], color=color_value_high, alpha=1.0, step='post')
 
-    norm = mcolors.Normalize(vmin=0.0, vmax=0.6) # Specify the range of the colormap => for symmetric pdfs, 0.5 is the maximum.
+    #sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    #sm.set_array([])
+    #cbar = plt.colorbar(sm, ax=ax)
+    #cbar.set_label('Probability of Deviations', rotation=270, labelpad=15)
 
-    for i in range(len(time) - 1):
-        color_value_low = cmap(norm(probs_low[i]))
-        color_value_high = cmap(norm(probs_high[i]))
-        ax.fill_between(time[i:i+2], pg_nom[i:i+2], pg_quantile_low[i:i+2], color=color_value_low, alpha=1.0, step='post')
-        ax.fill_between(time[i:i+2], pg_nom[i:i+2], pg_quantile_high[i:i+2], color=color_value_high, alpha=1.0, step='post')
-
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
-    cbar = plt.colorbar(sm, ax=ax)
-    cbar.set_label('Probability of Deviations', rotation=270, labelpad=15)
-
-    plt.ylim([-8.5, 4.5])
-    plt.xlim([-0.8, len(probs_low) + 0.3])
+    #plt.ylim([-8.5, 4.5])
+    #plt.xlim([-0.8, len(probs_low) + 0.3])
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
+    ax.set_ylim(bottom=-6.2)  # This ensures the y-axis extends to at least -6
     plt.tight_layout()
-    plt.subplots_adjust(left=0.08, right=1.05, top=0.95, bottom=0.2)
+    plt.subplots_adjust(left=0.08, right=0.97, top=0.95, bottom=0.2)
 
     ordered_time = model.model.time.ordered_data()
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, ordered_time)))
     plt.xticks(np.arange(0, len(probs_low), 2), rotation=45)
 
-    plt.legend(loc='lower right')
+    plt.legend(loc='upper left')
     plt.ylabel('Grid Power [kW]')
     file_path = get_file_path('dispatch_schedule.png')
     plt.savefig(file_path, dpi=200)

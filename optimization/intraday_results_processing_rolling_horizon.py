@@ -15,15 +15,15 @@ def postprocess_results_intra_rolling_horizon(models, timeframe, time_slots, day
     ''' Postprocess the results of the intraday optimizations. '''
 
     plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots)
-    plot_heat_maps_e_nominal(models, time_slots)
-    plot_heat_maps_e_range(models, time_slots)
-    plot_heat_maps_grid_nominal(models, time_slots)
-    plot_heat_maps_grid_quantiles(models, time_slots)
-    plot_heat_maps_nom_battery_to_maximal(models, time_slots)
-    plot_heat_maps_nom_to_max_grid_quantile(models, time_slots)
-    plot_heat_maps_nom_to_min_grid_quantile(models, time_slots)
-    plot_heat_maps_nom_battery_to_minimal(models, time_slots)
-    grid_costs_list, ss_costs_list = plot_costs(models, day_ahead_timeframe)
+    #plot_heat_maps_e_nominal(models, time_slots)
+    #plot_heat_maps_e_range(models, time_slots)
+    #plot_heat_maps_grid_nominal(models, time_slots)
+    #plot_heat_maps_grid_quantiles(models, time_slots)
+    #plot_heat_maps_nom_battery_to_maximal(models, time_slots)
+    #plot_heat_maps_nom_to_max_grid_quantile(models, time_slots)
+    #plot_heat_maps_nom_to_min_grid_quantile(models, time_slots)
+    #plot_heat_maps_nom_battery_to_minimal(models, time_slots)
+    #grid_costs_list, ss_costs_list = plot_costs(models, day_ahead_timeframe)
 
     plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, time_slots)
 
@@ -33,7 +33,8 @@ def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    colors = plt.cm.viridis(np.linspace(0, 1, len(time_slots)+1))
+    #colors = plt.cm.viridis(np.linspace(0, 1, len(time_slots)+1))
+    colors=plt.cm.viridis(np.linspace(0,1,6))
     color_counter = 0
     whole_e_gt = np.empty(25)
     all_timestamps_set = set()
@@ -103,7 +104,7 @@ def plot_battery_evolution_intra_rolling_horizon(models, timeframe, time_slots):
 
     plt.tight_layout()
     plt.subplots_adjust(left=0.08, right=0.97, top=0.95, bottom=0.2)
-    plt.legend(loc='lower right')
+    #plt.legend(loc='lower right')
     #ax.legend(loc='upper left', bbox_to_anchor=(0, 0.94), bbox_transform=ax.transAxes)
     plt.ylabel('Battery Storage [kWh]')
     file_path = get_file_path('battery_evolution_intra.png')
@@ -119,7 +120,9 @@ def plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, t
     plt.rcParams.update({'font.size': 15})
     fig, ax = plt.subplots(figsize=(10, 6))
     
-    colors = plt.cm.viridis(np.linspace(0, 1, len(time_slots)+1))
+    #colors = plt.cm.viridis(np.linspace(0, 1, len(time_slots)+1))
+    colors=plt.cm.viridis(np.linspace(0,1,6))
+
     color_counter = 0
     whole_pg_gt = np.empty(24)
     all_timestamps_set = set()
@@ -224,7 +227,7 @@ def plot_probabilistic_power_schedule_intra_rolling_horizon(models, timeframe, t
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, pos: custom_x_axis_formatter(x, pos, timestamps)))
     plt.xticks(np.arange(0, len(timestamps), 2), rotation=45)
 
-    plt.legend(loc='lower right')
+    #plt.legend(loc='lower right')
     plt.ylabel('Grid Power [kW]')
     file_path = get_file_path('dispatch_schedule_intra.png')
     plt.savefig(file_path, dpi=200)
